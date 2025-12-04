@@ -17,3 +17,4 @@ Unity filter=lfs diff=lfs merge=lfs -text
 scene filter=lfs diff=lfs merge=lfs -text
 (if filter=lfs diff=lfs merge=lfs -text
 large) filter=lfs diff=lfs merge=lfs -text
+*.so filter=lfs diff=lfs merge=lfs -text
