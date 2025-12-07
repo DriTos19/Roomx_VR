@@ -105,3 +105,13 @@ InitTestScene*.unity*
 Library/Artifacts/
 Library/Bee/
 Library/PlayerDataCache/
+
+# Ignore common Unity asset bundle & Android build outputs that are large
+*.unity3d
+*.data.unity3d
+*.out.aar
+*.aar
+*.jar
+*.apk
+*.aab
+*.obb
