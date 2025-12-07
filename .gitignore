@@ -11,6 +11,8 @@
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 *.log
+Library/
+/Library/
 
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
@@ -97,3 +99,11 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Unity Library folder (contains build artifacts and cache)
+/Library/
+
+# Alternative: More targeted approach (only exclude large build artifacts)
+Library/Artifacts/
+Library/Bee/
+Library/PlayerDataCache/
