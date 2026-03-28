@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/Assets/Toniii/Sandbox/WallPlacer.cs">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/Assets/Toniii/Sandbox/WallPlacer.cs" />
+              <option name="originalContent" value="using UnityEngine;&#10;using UnityEngine.XR.Interaction.Toolkit;&#10;&#10;public partial class WallPlacer_VR : MonoBehaviour&#10;{&#10;    [Header(&quot;Prefabs&quot;)]&#10;    public GameObject previewPrefab;&#10;    public GameObject realPrefab;&#10;&#10;    [Header(&quot;XR&quot;)]&#10;    public XRRayInteractor rightHandRay;&#10;&#10;    [Header(&quot;Settings&quot;)]&#10;    public float distance = 4f;&#10;    public float gridSize = 0.5f;&#10;&#10;    private GameObject previewInstance;&#10;    private bool isPlacing = true;&#10;&#10;    void Start()&#10;    {&#10;        StartPlacement();&#10;    }&#10;&#10;    void Update()&#10;    {&#10;        if (!isPlacing || previewInstance == null)&#10;            return;&#10;&#10;        UpdatePreview();&#10;&#10;        // TRIGGER = place&#10;        if (rightHandRay.selectAction.action.WasPressedThisFrame())&#10;        {&#10;            PlaceObject();&#10;        }&#10;&#10;        // SECONDARY BUTTON = cancel&#10;        if (rightHandRay.activateAction.action.WasPressedThisFrame())&#10;        {&#10;            CancelPlacement();&#10;        }&#10;    }&#10;&#10;    void StartPlacement()&#10;    {&#10;        previewInstance = Instantiate(previewPrefab);&#10;        MakeTransparent(previewInstance);&#10;        isPlacing = true;&#10;    }&#10;&#10;    void UpdatePreview()&#10;    {&#10;        if (rightHandRay.TryGetCurrent3DRaycastHit(out RaycastHit hit))&#10;        {&#10;            Vector3 pos = hit.point;&#10;&#10;            float height = previewInstance.GetComponentInChildren&lt;Renderer&gt;().bounds.size.y;&#10;            pos.y = height / 2f;&#10;&#10;            pos = SnapToGrid(pos, gridSize);&#10;&#10;            previewInstance.transform.position = pos;&#10;        }&#10;    }&#10;&#10;    void PlaceObject()&#10;    {&#10;        Instantiate(realPrefab, previewInstance.transform.position, Quaternion.identity);&#10;    }&#10;&#10;    void CancelPlacement()&#10;    {&#10;        Destroy(previewInstance);&#10;        isPlacing = false;&#10;    }&#10;&#10;    void MakeTransparent(GameObject obj)&#10;    {&#10;        foreach (Renderer r in obj.GetComponentsInChildren&lt;Renderer&gt;())&#10;        {&#10;            foreach (Material m in r.materials)&#10;            {&#10;                m.shader = Shader.Find(&quot;Legacy Shaders/Transparent/Diffuse&quot;);&#10;                Color c = m.color;&#10;                c.a = 0.5f;&#10;                m.color = c;&#10;            }&#10;        }&#10;    }&#10;&#10;    Vector3 SnapToGrid(Vector3 pos, float size)&#10;    {&#10;        pos.x = Mathf.Round(pos.x / size) * size;&#10;        pos.z = Mathf.Round(pos.z / size) * size;&#10;        return pos;&#10;    }&#10;}" />
+              <option name="updatedContent" value="// This file is intentionally empty. The WallPlacer_VR class is defined in WallPlacer_VR.cs&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

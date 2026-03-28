@@ -1594,7 +1594,7 @@
                 {
                     "name": "",
                     "id": "1d5b47ea-64e3-4b99-b620-de6c360908be",
-                    "path": "<MetaAimHand>{RightHand}/indexPressed",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "Generic XR Controller",
