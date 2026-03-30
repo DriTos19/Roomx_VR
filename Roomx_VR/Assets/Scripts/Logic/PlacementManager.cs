@@ -1,249 +1,114 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.InputSystem;
 
 public class PlacementManager : MonoBehaviour
 {
-    public static PlacementManager Instance;
+    public static PlacementManager Instance; // Verhindert Fehler aus image_a5fd87.png
 
-    [Header("Layers")]
-    public LayerMask groundLayer;
-    public LayerMask furnitureLayer;
+    [Header("Input (Rechte Hand)")]
+    public XRRayInteractor rayInteractor;
+    public InputActionProperty triggerPress; // XRI RightHand Interaction/Activate Value
+    public InputActionProperty rotateAction;  
+    public InputActionProperty cancelAction;  
 
-    [Header("Materials")]
-    public Material validMaterial;
-    public Material invalidMaterial;
+    [Header("Layer & Materialien")]
+    public LayerMask groundLayer; // Muss im Inspector auf "Ground" stehen
+    public Material validMaterial;   
+    public Material invalidMaterial; 
 
     [Header("Settings")]
-    public float rotationSpeed = 120f;
-    public float gridSize = 1f;
+    public float gridSize = 0.5f;
     public bool enableSnapping = true;
-    public float pickupRange = 10f;          // max raycast distance for pickup
-    public float doubleClickDelay = 0.3f;    // time window for double click
 
     private GameObject ghostObject;
-    private InventoryItemData currentItem;
+    private bool isPlacing = false;
+    private float currentRotation = 0f;
 
-    private float currentRotationY;
-    private bool isValidPlacement = true;
+    public bool IsCarryingObject => isPlacing;
 
-    private float lastClickTime = -1f;
+    void Awake() { Instance = this; }
 
-    void Awake()
+    public void StartPlacement(GameObject prefab)
     {
-        Instance = this;
+        if (ghostObject != null) Destroy(ghostObject);
+        ghostObject = Instantiate(prefab);
+        PrepareGhost();
+    }
+
+    public void PickUpFurniture(GameObject furniture)
+    {
+        if (isPlacing) return;
+        ghostObject = furniture;
+        PrepareGhost();
+    }
+
+    private void PrepareGhost()
+    {
+        // WICHTIG: Schaltet alle Collider am Möbel aus, damit der Raycast den Boden trifft
+        foreach (var col in ghostObject.GetComponentsInChildren<Collider>()) col.enabled = false;
+        isPlacing = true;
     }
 
     void Update()
     {
-       
+        if (!isPlacing || ghostObject == null) return;
 
-        // If holding an object, handle placement
-        if (ghostObject != null)
+        // 1. DREHEN
+        float rotateInput = rotateAction.action.ReadValue<Vector2>().x;
+        currentRotation += rotateInput * 120f * Time.deltaTime;
+
+        // 2. ABBRECHEN (Rechter Grip)
+        if (cancelAction.action.WasPressedThisFrame())
         {
-            FollowMouse();
-            HandleRotation();
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (!IsPointerOverUI())
-                    TryPlaceObject();
-            }
-
-            if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
-                CancelPlacement();
-
-            return; // skip pickup detection while placing
+            Destroy(ghostObject);
+            isPlacing = false;
+            return;
         }
 
-        // Double-click detection to pick up furniture
-        if (Input.GetMouseButtonDown(0))
+        // 3. POSITIONIEREN & DROP-CHECK
+        if (rayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit hit))
         {
-            if (IsPointerOverUI()) return;
-
-            float timeSinceLastClick = Time.time - lastClickTime;
-
-            if (timeSinceLastClick <= doubleClickDelay)
-            {
-                // Double click detected — try to pick up
-                TryPickUpFurniture();
-                lastClickTime = -1f; // reset so triple-click doesn't re-trigger
-            }
-            else
-            {
-                lastClickTime = Time.time;
-            }
-        }
-    }
-
-    void TryPickUpFurniture()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, furnitureLayer))
-        {
-            GameObject target = hit.collider.gameObject;
-
-            // Walk up to root in case collider is on a child
-            FurniturePrefabReference refData = target.GetComponentInParent<FurniturePrefabReference>();
-
-            if (refData != null)
-                PickUpFurniture(refData.gameObject);
-        }
-    }
-
-    public void StartPlacement(InventoryItemData item)
-    {
-        CancelPlacement();
-
-        currentItem = item;
-        ghostObject = Instantiate(item.prefab3D);
-        currentRotationY = 0f;
-
-        foreach (Collider col in ghostObject.GetComponentsInChildren<Collider>())
-            col.enabled = false;
-
-        SetGhostMaterial(validMaterial);
-    }
-
-    void FollowMouse()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundLayer))
-        {
-            Vector3 pos = hit.point;
+            ghostObject.SetActive(true);
+            Vector3 targetPos = hit.point;
 
             if (enableSnapping)
-                pos = SnapToGrid(pos);
-
-            ghostObject.transform.position = pos;
-            isValidPlacement = CheckCollision(pos);
-            SetGhostMaterial(isValidPlacement ? validMaterial : invalidMaterial);
-        }
-    }
-
-    bool CheckCollision(Vector3 position)
-    {
-        foreach (Collider col in ghostObject.GetComponentsInChildren<Collider>())
-            col.enabled = true;
-
-        Collider[] hits = Physics.OverlapBox(
-            position,
-            GetBounds() / 2f,
-            ghostObject.transform.rotation,
-            furnitureLayer
-        );
-
-        foreach (Collider col in ghostObject.GetComponentsInChildren<Collider>())
-            col.enabled = false;
-
-        return hits.Length == 0;
-    }
-
-    Vector3 GetBounds()
-    {
-        Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>();
-        Bounds bounds = renderers[0].bounds;
-
-        foreach (Renderer r in renderers)
-            bounds.Encapsulate(r.bounds);
-
-        return bounds.size;
-    }
-
-    void HandleRotation()
-    {
-        if (Input.GetKey(KeyCode.Q))
-            currentRotationY -= rotationSpeed * Time.deltaTime;
-
-        if (Input.GetKey(KeyCode.E))
-            currentRotationY += rotationSpeed * Time.deltaTime;
-
-        ghostObject.transform.rotation = Quaternion.Euler(0, currentRotationY, 0);
-    }
-
-    void TryPlaceObject()
-    {
-        if (!isValidPlacement) return;
-
-        GameObject newObj = Instantiate(
-            currentItem.prefab3D,
-            ghostObject.transform.position,
-            ghostObject.transform.rotation
-        );
-
-        // Save/load reference
-        FurniturePrefabReference prefabRef = newObj.AddComponent<FurniturePrefabReference>();
-        prefabRef.prefabPath = currentItem.name;
-
-        // Register with save manager
-        FurnitureSaveManager saveManager = FindObjectOfType<FurnitureSaveManager>();
-        if (saveManager != null)
-            saveManager.activeFurniture.Add(newObj);
-
-        SetLayerRecursively(newObj, "Furniture");
-
-        CancelPlacement();
-    }
-
-    public void PickUpFurniture(GameObject obj)
-    {
-        FurniturePrefabReference refData = obj.GetComponent<FurniturePrefabReference>();
-        if (refData == null) return;
-
-        // Remove from save manager list
-        FurnitureSaveManager saveManager = FindObjectOfType<FurnitureSaveManager>();
-        if (saveManager != null)
-            saveManager.activeFurniture.Remove(obj);
-
-        InventoryManager inv = FindObjectOfType<InventoryManager>();
-        if (inv == null) return;
-
-        foreach (var item in inv.items)
-        {
-            if (item.name == refData.prefabPath)
             {
-                Destroy(obj);
-                StartPlacement(item);
-                return;
+                targetPos.x = Mathf.Round(targetPos.x / gridSize) * gridSize;
+                targetPos.z = Mathf.Round(targetPos.z / gridSize) * gridSize;
+            }
+
+            ghostObject.transform.position = targetPos;
+            ghostObject.transform.rotation = Quaternion.Euler(0, currentRotation, 0);
+
+            // Prüft, ob der getroffene Layer "Ground" ist
+            bool isValid = ((1 << hit.collider.gameObject.layer) & groundLayer) != 0;
+            
+            // Visuelles Feedback
+            ApplyMaterial(isValid ? validMaterial : invalidMaterial);
+
+            // 4. PLATZIEREN (Der Drop Part)
+            if (triggerPress.action.WasPressedThisFrame() && isValid)
+            {
+                FinalizePlacement();
             }
         }
+        else
+        {
+            ApplyMaterial(invalidMaterial);
+        }
     }
 
-    void CancelPlacement()
+    void FinalizePlacement()
     {
-        if (ghostObject != null)
-            Destroy(ghostObject);
-
+        // Collider wieder einschalten, damit man es wieder aufheben kann
+        foreach (var col in ghostObject.GetComponentsInChildren<Collider>()) col.enabled = true;
         ghostObject = null;
-        currentItem = null;
+        isPlacing = false;
     }
 
-    void SetGhostMaterial(Material mat)
+    void ApplyMaterial(Material mat)
     {
-        foreach (Renderer r in ghostObject.GetComponentsInChildren<Renderer>())
-            r.material = mat;
-    }
-
-    void SetLayerRecursively(GameObject obj, string layerName)
-    {
-        int layer = LayerMask.NameToLayer(layerName);
-        obj.layer = layer;
-
-        foreach (Transform child in obj.transform)
-            SetLayerRecursively(child.gameObject, layerName);
-    }
-
-    Vector3 SnapToGrid(Vector3 pos)
-    {
-        float x = Mathf.Round(pos.x / gridSize) * gridSize;
-        float y = pos.y;
-        float z = Mathf.Round(pos.z / gridSize) * gridSize;
-        return new Vector3(x, y, z);
-    }
-
-    bool IsPointerOverUI()
-    {
-        return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        foreach (var rend in ghostObject.GetComponentsInChildren<MeshRenderer>()) rend.material = mat;
     }
 }
