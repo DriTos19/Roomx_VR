@@ -4,22 +4,20 @@ using UnityEngine.UI;
 public class ItemSlotUI : MonoBehaviour
 {
     public Image iconImage;
-
     private InventoryItemData itemData;
-    private InventoryManager inventoryManager;
+    private InventoryManager manager;
 
-    public void Setup(InventoryItemData item, InventoryManager manager)
+    public void Setup(InventoryItemData data, InventoryManager invManager)
     {
-        itemData = item;
-        inventoryManager = manager;
+        itemData = data;
+        manager = invManager;
+        if(iconImage != null && data.icon != null) iconImage.sprite = data.icon;
 
-        iconImage.sprite = item.icon;
-
-        GetComponent<Button>().onClick.AddListener(OnClick);
-    }
-
-    private void OnClick()
-    {
-        inventoryManager.ShowItemDetails(itemData);
+        Button btn = GetComponent<Button>();
+        if(btn != null) 
+        {
+            btn.onClick.RemoveAllListeners(); // Verhindert doppelte Klicks
+            btn.onClick.AddListener(() => manager.SelectItem(itemData));
+        }
     }
 }
