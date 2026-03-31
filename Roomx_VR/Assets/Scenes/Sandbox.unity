@@ -2132,7 +2132,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac9b824ae539a3c4399c54fc36fe764b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  previewPrefab: {fileID: 5707863668577765516, guid: 42ca9e2cc09af3e41afc63f0c2393437, type: 3}
+  previewPrefab: {fileID: 7033772882168148944, guid: f4dd8aaf4810fcc4d8df7beb8620158d, type: 3}
   realPrefab: {fileID: 5707863668577765516, guid: 42ca9e2cc09af3e41afc63f0c2393437, type: 3}
   rightControllerTransform: {fileID: 580833376}
   placeAction:
@@ -2146,46 +2146,53 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: -2439264783773714294, guid: 0be0028c24f2a4c14a96b6aa39055933, type: 3}
+    m_Reference: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   editAction:
     m_UseReference: 1
     m_Action:
       m_Name: Edit
       m_Type: 0
       m_ExpectedControlType: 
-      m_Id: a64bf6ba-fa33-4a2d-a932-a8c6d5cef5b9
+      m_Id: 948b8b52-bde0-4dd8-a5e6-3daaed2f9711
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: -2439264783773714294, guid: 0be0028c24f2a4c14a96b6aa39055933, type: 3}
+    m_Reference: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   cancelAction:
     m_UseReference: 1
     m_Action:
       m_Name: Cancel
       m_Type: 0
       m_ExpectedControlType: 
-      m_Id: 6fdfeaf8-6616-4e92-89eb-66a28ca09937
+      m_Id: 3c3c11d3-a2a3-4f4a-b12a-833261715d68
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: 0}
+    m_Reference: {fileID: -5982496924579745919, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   wheelAction:
     m_UseReference: 1
     m_Action:
       m_Name: Wheel
       m_Type: 0
       m_ExpectedControlType: 
-      m_Id: 477917a3-6094-46b0-8ff9-90965c50f06e
+      m_Id: 72aebbf6-f07f-415f-ae17-2f32224250b9
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: 5667446173830999989, guid: 0be0028c24f2a4c14a96b6aa39055933, type: 3}
+    m_Reference: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   placeDistance: 5
   maxDistance: 5
   gridSize: 0.3
+  surfaceOffset: 0
+  placementSurfaceMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  supportPointInset: 0.9
+  maxAllowedHeightDifference: 0.05
+  overlapShrink: 0.95
   materialWheelController: {fileID: 1874091963}
   enableDebugLogs: 1
 --- !u!1 &1140240591
@@ -2398,7 +2405,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6598815579406187037, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2722,7 +2729,7 @@ Transform:
   m_GameObject: {fileID: 1763733795}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.27, z: 5.34}
+  m_LocalPosition: {x: 0, y: 0.237, z: 5.48}
   m_LocalScale: {x: 3.18, y: 0.5, z: 3.71}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &5360227190809303317
+--- !u!1001 &3362672594976766812
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -50,12 +50,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5707863668577765516, guid: 42ca9e2cc09af3e41afc63f0c2393437, type: 3}
       propertyPath: m_Name
-      value: Cube Variant
+      value: Box Variant
       objectReference: {fileID: 0}
     - target: {fileID: 6665428819676617865, guid: 42ca9e2cc09af3e41afc63f0c2393437, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 22262639920f43d6be32430e4e58350d, type: 2}
+      objectReference: {fileID: 2100000, guid: fb4d88adb8208094cbb8c34b7f7660cd, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
