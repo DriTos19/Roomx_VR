@@ -3525,16 +3525,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63b154a38984458429fbb45a1c86cab9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainMenuPanel: {fileID: 0}
+  mainMenuPanel: {fileID: 758632818}
   secondMenuPanel: {fileID: 0}
   settingsPanel: {fileID: 320854723}
   helpPanel: {fileID: 0}
-  houseSelectionPanel: {fileID: 0}
-  languagePanel: {fileID: 0}
-  houseButtons: []
-  houseSceneNames: []
-  nextButton: {fileID: 0}
-  previousButton: {fileID: 0}
+  houseSelectionPanel: {fileID: 1844177498}
+  languagePanel: {fileID: 355965851}
+  houseButtons:
+  - {fileID: 1598646352}
+  - {fileID: 2007097513}
+  - {fileID: 1167243419}
+  - {fileID: 642994730}
+  - {fileID: 131609716}
+  houseSceneNames:
+  - HouseEnton
+  - house_klea
+  - house_klea2
+  - HouseSidrit
+  nextButton: {fileID: 1455774472}
+  previousButton: {fileID: 1614341964}
   backgroundMusic: {fileID: 0}
   muteIcon: {fileID: 0}
   muteSprite: {fileID: 0}
@@ -7646,7 +7655,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6598815579406187037, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
