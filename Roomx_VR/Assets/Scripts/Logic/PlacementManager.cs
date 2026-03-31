@@ -25,10 +25,15 @@ public class PlacementManager : MonoBehaviour
     private GameObject ghostObject;
     private bool isPlacing = false;
     private float currentRotation = 0f;
+    private bool isValid = false;
+    private bool canPlaceThisFrame = false;
 
     public bool IsCarryingObject => isPlacing;
 
-    void Awake() { Instance = this; }
+    void Awake() 
+    { 
+        if (Instance == null) Instance = this; 
+    }
 
     public void StartPlacement(GameObject prefab)
     {
@@ -37,13 +42,23 @@ public class PlacementManager : MonoBehaviour
 
         ghostObject = Instantiate(prefab);
         PrepareGhost();
+        canPlaceThisFrame = false; // Verhindert Sofort-Platzierung beim Menüklick
+    }
+
+    public void PickUpFurniture(GameObject furniture)
+    {
+        if (isPlacing || furniture == null) return;
+
+        ghostObject = furniture;
+        PrepareGhost();
+        canPlaceThisFrame = true; 
     }
 
     private void PrepareGhost()
     {
         if (ghostObject == null) return;
         
-        // Collider deaktivieren, damit der Raycast den Boden trifft
+        // Collider aus, damit der Raycast nicht am Möbelstück hängen bleibt
         foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
             col.enabled = false;
 
@@ -53,16 +68,21 @@ public class PlacementManager : MonoBehaviour
 
     void Update()
     {
-        // Wenn nichts platziert wird oder das Objekt fehlt, Update stoppen
         if (!isPlacing || ghostObject == null) return;
         if (InventoryManager.IsMenuOpen()) return;
 
         HandleRotation();
         
-        if (cancelAction.action.WasPressedThisFrame()) 
+        // WICHTIG: Nur abbrechen, wenn NICHT gleichzeitig platziert wird
+        if (cancelAction.action.WasPressedThisFrame() && !triggerPress.action.WasPressedThisFrame()) 
+        {
             CancelPlacement();
+            return;
+        }
 
         HandlePositioning();
+
+        if (!canPlaceThisFrame) canPlaceThisFrame = true;
     }
 
     void HandleRotation()
@@ -75,7 +95,6 @@ public class PlacementManager : MonoBehaviour
     {
         if (rayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit hit))
         {
-            // SICHERHEIT: Falls ghostObject währenddessen zerstört wurde
             if (ghostObject == null) return;
 
             ghostObject.SetActive(true);
@@ -90,22 +109,19 @@ public class PlacementManager : MonoBehaviour
             ghostObject.transform.position = targetPos;
             ghostObject.transform.rotation = Quaternion.Euler(0, currentRotation, 0);
 
-            // Layer Check: Trifft der Strahl den Boden?
-            bool isValid = hit.collider != null && ((1 << hit.collider.gameObject.layer) & groundLayer) != 0;
-
-            // FIX FÜR NULL-REFERENCE (Alt: Zeile 94)
+            // Check ob der Boden getroffen wurde
+            isValid = ((1 << hit.collider.gameObject.layer) & groundLayer) != 0;
             ApplyMaterial(isValid ? validMaterial : invalidMaterial);
 
-            // PLATZIEREN: Nur wenn grün (isValid)
-            if (triggerPress.action.WasPressedThisFrame() && isValid)
+            if (triggerPress.action.WasPressedThisFrame() && canPlaceThisFrame)
             {
-                Debug.Log("Objekt erfolgreich platziert!");
-                FinalizePlacement();
+                if (isValid) FinalizePlacement();
+                else Debug.Log("Ungültige Position - Kein Platzieren möglich.");
             }
         }
         else
         {
-            if (ghostObject != null) ghostObject.SetActive(false);
+            if (ghostObject != null) ApplyMaterial(invalidMaterial);
         }
     }
 
@@ -113,58 +129,36 @@ public class PlacementManager : MonoBehaviour
     {
         if (ghostObject == null) return;
 
-        Debug.Log("Finalisiere Platzierung für: " + ghostObject.name);
-
-        // 1. Alle Collider wieder einschalten, damit man es später wieder aufheben kann
         foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
-        {
             col.enabled = true;
-        }
 
-        // 2. Den Shader/Material wieder auf Standard setzen (Wichtig!)
-        // Hier entfernen wir die rote/grüne Markierung
-        MeshRenderer[] renderers = ghostObject.GetComponentsInChildren<MeshRenderer>();
-        foreach (var rend in renderers)
-        {
-            // Wir setzen das Material zurück, das das Objekt ursprünglich hatte
-            // Oder wir weisen hier ein neutrales Standard-Material zu
-        }
-
-        // 3. Das Objekt auf einen Layer setzen, der NICHT der Ground-Layer ist
+        // Objekt auf den Furniture-Layer setzen
         int furnLayer = LayerMask.NameToLayer("Furniture");
-        if (furnLayer != -1) 
-        {
-            SetLayerRecursively(ghostObject, furnLayer);
-        }
+        if (furnLayer != -1) SetLayerRecursively(ghostObject, furnLayer);
 
-        // 4. DIE REFERENZ LÖSEN (DAS IST DER ENTSCHEIDENDE PUNKT)
-        // Wir setzen nur die Variable im Script auf null, damit Update() aufhört es zu bewegen.
-        // Das Objekt selbst bleibt in der Hierarchy bestehen!
         ghostObject = null;
         isPlacing = false;
-    
-        Debug.Log("Objekt erfolgreich in der Szene verankert.");
+        Debug.Log("Objekt erfolgreich platziert!");
     }
 
     public void CancelPlacement()
     {
-        if (ghostObject != null) Destroy(ghostObject);
+        if (ghostObject != null) 
+        {
+            Destroy(ghostObject);
+            Debug.Log("Platzierung abgebrochen, Objekt gelöscht.");
+        }
         ghostObject = null;
         isPlacing = false;
     }
 
     void ApplyMaterial(Material mat)
     {
-        // SICHERHEIT: Wenn kein Material im Inspector zugewiesen wurde
         if (mat == null || ghostObject == null) return;
-
         MeshRenderer[] renderers = ghostObject.GetComponentsInChildren<MeshRenderer>();
         foreach (var rend in renderers)
         {
-            if (rend != null) // Prüfen, ob der Renderer wirklich existiert
-            {
-                rend.material = mat;
-            }
+            if (rend != null) rend.material = mat;
         }
     }
 
@@ -173,21 +167,5 @@ public class PlacementManager : MonoBehaviour
         obj.layer = newLayer;
         foreach (Transform child in obj.transform)
             SetLayerRecursively(child.gameObject, newLayer);
-    }
-    public void PickUpFurniture(GameObject furniture)
-    {
-        if (isPlacing || furniture == null) return;
-
-        // Das Möbelstück wird zum neuen "Ghost"
-        ghostObject = furniture;
-    
-        // Collider ausschalten, damit der Raycast zum Boden durchgeht
-        foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
-            col.enabled = false;
-
-        isPlacing = true;
-        currentRotation = ghostObject.transform.eulerAngles.y;
-    
-        Debug.Log("Möbelstück zum Verschieben aufgehoben: " + furniture.name);
     }
 }
