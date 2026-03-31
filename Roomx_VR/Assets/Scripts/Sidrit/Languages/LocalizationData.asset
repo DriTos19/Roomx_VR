@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d68967bac97657c48a6328b54b7ae7f6, type: 3}
+  m_Name: LocalizationData
+  m_EditorClassIdentifier: 
+  entries:
+  - key: btn_buy
+    english: Buy
+    albanian: Blej
+    german: Kaufen
+  - key: btn_settings
+    english: Settings
+    albanian: "Cil\xEBsimet"
+    german: Einstellungen
+  - key: hud_balance
+    english: Balance
+    albanian: Bilanci
+    german: Guthaben
+  - key: notice_no_funds
+    english: Not enough money
+    albanian: Nuk ka para
+    german: Nicht genug Geld
+  - key: languages
+    english: Languages
+    albanian: "Gjuh\xEBt"
+    german: Sprachen
+  - key: explore_designs
+    english: Explore Designs
+    albanian: Eksploro Dizajne
+    german: Designs erkunden
+  - key: sandbox
+    english: Sandbox
+    albanian: Sandbox
+    german: Sandbox
+  - key: settings
+    english: Settings
+    albanian: "Cil\xEBsimet"
+    german: Einstellungen
+  - key: exit
+    english: Exit
+    albanian: Dalje
+    german: Beenden
+  - key: german
+    english: German
+    albanian: Gjermanisht
+    german: Deutsch
+  - key: albanian
+    english: Albanian
+    albanian: Shqip
+    german: Albanisch
+  - key: english
+    english: English
+    albanian: Anglisht
+    german: Englisch
+  - key: previous
+    english: Previous
+    albanian: "Paraardh\xEBse"
+    german: "Zur\xFCck"
+  - key: next
+    english: Next
+    albanian: "Tjet\xEBr"
+    german: Weiter
+  - key: back
+    english: Back
+    albanian: Kthehu
+    german: "Zur\xFCck"
+  - key: back_to_mainmenu
+    english: Back To Mainmenu
+    albanian: "Kthehu n\xEB menun\xEB kryesore"
+    german: "Zur\xFCck zum Hauptmen\xFC"
