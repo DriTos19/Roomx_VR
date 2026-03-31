@@ -90,7 +90,7 @@ public class InventoryManager : MonoBehaviour
     {
         isOpen = false;
         SetMenuState(false);
-        PlacementManager.Instance.StartPlacement(data.prefab3D);
+        PlacementManager.Instance.StartPlacement(data.prefab3D, data.name);
     }
 
     private void SetMenuState(bool state)
