@@ -9,11 +9,11 @@ public class InventoryManager : MonoBehaviour
     [Header("VR Setup")]
     public Transform xrCamera;
     public CanvasGroup canvasGroup;
-    public InputActionProperty toggleButton; // XRI LeftHand Interaction/UI Press
+    public InputActionProperty toggleButton;
 
     [Header("Menu Settings")]
     public float distanceFromPlayer = 1.2f;
-    public float menuHeight = 0f; // height offset if needed
+    public float menuHeight = 0f;
 
     [Header("Slots")]
     public Transform slotParent;
@@ -37,17 +37,16 @@ public class InventoryManager : MonoBehaviour
     {
         if (toggleButton.action.WasPressedThisFrame())
         {
+            // Block opening while carrying object
             if (PlacementManager.Instance.IsCarryingObject) return;
 
             isOpen = !isOpen;
             SetMenuState(isOpen);
         }
 
-        // Always snap in front of player while open, no lerp
+        // Every frame snap in front of player while open
         if (isOpen)
-        {
             SnapToPlayer();
-        }
     }
 
     void SnapToPlayer()
@@ -58,13 +57,13 @@ public class InventoryManager : MonoBehaviour
         forward.y = 0;
         forward.Normalize();
 
-        // If looking straight up/down fallback to transform.forward
+        // Fallback if looking straight up or down
         if (forward.magnitude < 0.1f)
-            forward = new Vector3(xrCamera.forward.x, 0, xrCamera.forward.z).normalized;
+            forward = Vector3.forward;
 
-        transform.position = xrCamera.position 
-                             + forward * distanceFromPlayer 
-                             + Vector3.up * menuHeight;
+        transform.position = xrCamera.position
+            + forward * distanceFromPlayer
+            + Vector3.up * menuHeight;
 
         transform.rotation = Quaternion.LookRotation(forward);
         transform.Rotate(0, 180, 0);
@@ -99,53 +98,5 @@ public class InventoryManager : MonoBehaviour
         canvasGroup.alpha = state ? 1 : 0;
         canvasGroup.interactable = state;
         canvasGroup.blocksRaycasts = state;
-    }
-
-    // Snaps menu in front of player when first opened
-    void PositionMenu()
-    {
-        if (xrCamera == null) return;
-
-        Vector3 forward = xrCamera.forward;
-        forward.y = 0;
-        forward.Normalize();
-
-        Vector3 targetPos = xrCamera.position
-            + forward * distanceFromPlayer
-            + Vector3.up * menuHeight;
-
-        transform.position = targetPos;
-        transform.LookAt(new Vector3(
-            xrCamera.position.x,
-            transform.position.y,
-            xrCamera.position.z));
-        transform.Rotate(0, 180, 0);
-    }
-
-    // Smoothly follows player while open
-    void FollowPlayer()
-    {
-        if (xrCamera == null) return;
-
-        Vector3 forward = xrCamera.forward;
-        forward.y = 0;
-        forward.Normalize();
-
-        Vector3 targetPos = xrCamera.position
-            + forward * distanceFromPlayer
-            + Vector3.up * menuHeight;
-
-        // Smooth follow
-        transform.position = Vector3.Lerp(
-            transform.position,
-            targetPos,
-            Time.deltaTime * 5f);
-
-        // Always face player
-        transform.LookAt(new Vector3(
-            xrCamera.position.x,
-            transform.position.y,
-            xrCamera.position.z));
-        transform.Rotate(0, 180, 0);
     }
 }

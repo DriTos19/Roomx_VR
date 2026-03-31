@@ -4,22 +4,23 @@ using UnityEngine.InputSystem;
 
 public class PlacementManager : MonoBehaviour
 {
-    public static PlacementManager Instance; // Verhindert Fehler aus image_a5fd87.png
+    public static PlacementManager Instance;
 
-    [Header("Input (Rechte Hand)")]
+    [Header("VR Input (Right Hand)")]
     public XRRayInteractor rayInteractor;
-    public InputActionProperty triggerPress; // XRI RightHand Interaction/Activate Value
-    public InputActionProperty rotateAction;  
-    public InputActionProperty cancelAction;  
+    public InputActionProperty triggerPress;
+    public InputActionProperty rotateAction;
+    public InputActionProperty cancelAction;
 
-    [Header("Layer & Materialien")]
-    public LayerMask groundLayer; // Muss im Inspector auf "Ground" stehen
-    public Material validMaterial;   
-    public Material invalidMaterial; 
+    [Header("Layers & Materials")]
+    public LayerMask groundLayer;
+    public Material validMaterial;
+    public Material invalidMaterial;
 
     [Header("Settings")]
     public float gridSize = 0.5f;
     public bool enableSnapping = true;
+    public float rotationSpeed = 120f;
 
     private GameObject ghostObject;
     private bool isPlacing = false;
@@ -31,44 +32,52 @@ public class PlacementManager : MonoBehaviour
 
     public void StartPlacement(GameObject prefab)
     {
-        if (ghostObject != null) Destroy(ghostObject);
-        ghostObject = Instantiate(prefab);
-        PrepareGhost();
-    }
+        if (isPlacing) CancelPlacement();
+        if (prefab == null) return;
 
-    public void PickUpFurniture(GameObject furniture)
-    {
-        if (isPlacing) return;
-        ghostObject = furniture;
+        ghostObject = Instantiate(prefab);
         PrepareGhost();
     }
 
     private void PrepareGhost()
     {
-        // WICHTIG: Schaltet alle Collider am Möbel aus, damit der Raycast den Boden trifft
-        foreach (var col in ghostObject.GetComponentsInChildren<Collider>()) col.enabled = false;
+        if (ghostObject == null) return;
+        
+        // Collider deaktivieren, damit der Raycast den Boden trifft
+        foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
+            col.enabled = false;
+
         isPlacing = true;
+        currentRotation = ghostObject.transform.eulerAngles.y;
     }
 
     void Update()
     {
+        // Wenn nichts platziert wird oder das Objekt fehlt, Update stoppen
         if (!isPlacing || ghostObject == null) return;
+        if (InventoryManager.IsMenuOpen()) return;
 
-        // 1. DREHEN
+        HandleRotation();
+        
+        if (cancelAction.action.WasPressedThisFrame()) 
+            CancelPlacement();
+
+        HandlePositioning();
+    }
+
+    void HandleRotation()
+    {
         float rotateInput = rotateAction.action.ReadValue<Vector2>().x;
-        currentRotation += rotateInput * 120f * Time.deltaTime;
+        currentRotation += rotateInput * rotationSpeed * Time.deltaTime;
+    }
 
-        // 2. ABBRECHEN (Rechter Grip)
-        if (cancelAction.action.WasPressedThisFrame())
-        {
-            Destroy(ghostObject);
-            isPlacing = false;
-            return;
-        }
-
-        // 3. POSITIONIEREN & DROP-CHECK
+    void HandlePositioning()
+    {
         if (rayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit hit))
         {
+            // SICHERHEIT: Falls ghostObject währenddessen zerstört wurde
+            if (ghostObject == null) return;
+
             ghostObject.SetActive(true);
             Vector3 targetPos = hit.point;
 
@@ -81,34 +90,104 @@ public class PlacementManager : MonoBehaviour
             ghostObject.transform.position = targetPos;
             ghostObject.transform.rotation = Quaternion.Euler(0, currentRotation, 0);
 
-            // Prüft, ob der getroffene Layer "Ground" ist
-            bool isValid = ((1 << hit.collider.gameObject.layer) & groundLayer) != 0;
-            
-            // Visuelles Feedback
+            // Layer Check: Trifft der Strahl den Boden?
+            bool isValid = hit.collider != null && ((1 << hit.collider.gameObject.layer) & groundLayer) != 0;
+
+            // FIX FÜR NULL-REFERENCE (Alt: Zeile 94)
             ApplyMaterial(isValid ? validMaterial : invalidMaterial);
 
-            // 4. PLATZIEREN (Der Drop Part)
+            // PLATZIEREN: Nur wenn grün (isValid)
             if (triggerPress.action.WasPressedThisFrame() && isValid)
             {
+                Debug.Log("Objekt erfolgreich platziert!");
                 FinalizePlacement();
             }
         }
         else
         {
-            ApplyMaterial(invalidMaterial);
+            if (ghostObject != null) ghostObject.SetActive(false);
         }
     }
 
     void FinalizePlacement()
     {
-        // Collider wieder einschalten, damit man es wieder aufheben kann
-        foreach (var col in ghostObject.GetComponentsInChildren<Collider>()) col.enabled = true;
+        if (ghostObject == null) return;
+
+        Debug.Log("Finalisiere Platzierung für: " + ghostObject.name);
+
+        // 1. Alle Collider wieder einschalten, damit man es später wieder aufheben kann
+        foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
+        {
+            col.enabled = true;
+        }
+
+        // 2. Den Shader/Material wieder auf Standard setzen (Wichtig!)
+        // Hier entfernen wir die rote/grüne Markierung
+        MeshRenderer[] renderers = ghostObject.GetComponentsInChildren<MeshRenderer>();
+        foreach (var rend in renderers)
+        {
+            // Wir setzen das Material zurück, das das Objekt ursprünglich hatte
+            // Oder wir weisen hier ein neutrales Standard-Material zu
+        }
+
+        // 3. Das Objekt auf einen Layer setzen, der NICHT der Ground-Layer ist
+        int furnLayer = LayerMask.NameToLayer("Furniture");
+        if (furnLayer != -1) 
+        {
+            SetLayerRecursively(ghostObject, furnLayer);
+        }
+
+        // 4. DIE REFERENZ LÖSEN (DAS IST DER ENTSCHEIDENDE PUNKT)
+        // Wir setzen nur die Variable im Script auf null, damit Update() aufhört es zu bewegen.
+        // Das Objekt selbst bleibt in der Hierarchy bestehen!
+        ghostObject = null;
+        isPlacing = false;
+    
+        Debug.Log("Objekt erfolgreich in der Szene verankert.");
+    }
+
+    public void CancelPlacement()
+    {
+        if (ghostObject != null) Destroy(ghostObject);
         ghostObject = null;
         isPlacing = false;
     }
 
     void ApplyMaterial(Material mat)
     {
-        foreach (var rend in ghostObject.GetComponentsInChildren<MeshRenderer>()) rend.material = mat;
+        // SICHERHEIT: Wenn kein Material im Inspector zugewiesen wurde
+        if (mat == null || ghostObject == null) return;
+
+        MeshRenderer[] renderers = ghostObject.GetComponentsInChildren<MeshRenderer>();
+        foreach (var rend in renderers)
+        {
+            if (rend != null) // Prüfen, ob der Renderer wirklich existiert
+            {
+                rend.material = mat;
+            }
+        }
+    }
+
+    void SetLayerRecursively(GameObject obj, int newLayer)
+    {
+        obj.layer = newLayer;
+        foreach (Transform child in obj.transform)
+            SetLayerRecursively(child.gameObject, newLayer);
+    }
+    public void PickUpFurniture(GameObject furniture)
+    {
+        if (isPlacing || furniture == null) return;
+
+        // Das Möbelstück wird zum neuen "Ghost"
+        ghostObject = furniture;
+    
+        // Collider ausschalten, damit der Raycast zum Boden durchgeht
+        foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
+            col.enabled = false;
+
+        isPlacing = true;
+        currentRotation = ghostObject.transform.eulerAngles.y;
+    
+        Debug.Log("Möbelstück zum Verschieben aufgehoben: " + furniture.name);
     }
 }
