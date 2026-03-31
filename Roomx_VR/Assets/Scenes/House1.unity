@@ -1895,8 +1895,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   xrCamera: {fileID: 2147457594}
-  distance: 1.5
-  smoothSpeed: 5
+  canvasGroup: {fileID: 747486283}
   toggleButton:
     m_UseReference: 1
     m_Action:
@@ -1909,7 +1908,8 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 3279264004350380116, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  canvasGroup: {fileID: 747486283}
+  distanceFromPlayer: 1.4
+  menuHeight: 0
   slotParent: {fileID: 1146721215}
   slotPrefab: {fileID: 8936158477652089839, guid: 734c8a947030cf140aa415f9624c8e5f, type: 3}
   items:
@@ -2432,12 +2432,23 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -5913262927076077117, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  cancelAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: fc0c0075-c7b7-4e83-bcaa-56b66dff6205
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
   validMaterial: {fileID: -1489806291493579169, guid: 54500fbb54dbae8428f304d78be1b592, type: 3}
   invalidMaterial: {fileID: 7390553463975553142, guid: 7ab6f3b0fd1a6ba41b2a47766c16613f, type: 3}
-  rotationSpeed: 120
   gridSize: 0.5
   enableSnapping: 1
 --- !u!4 &1120960067
