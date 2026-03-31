@@ -1,126 +1,151 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using UnityEngine.XR;
+using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class InventoryManager : MonoBehaviour
 {
-    [Header("UI References")]
-    public GameObject inventoryMenu;
+    public static InventoryManager Instance;
+
+    [Header("VR Setup")]
+    public Transform xrCamera;
+    public CanvasGroup canvasGroup;
+    public InputActionProperty toggleButton; // XRI LeftHand Interaction/UI Press
+
+    [Header("Menu Settings")]
+    public float distanceFromPlayer = 1.2f;
+    public float menuHeight = 0f; // height offset if needed
+
+    [Header("Slots")]
     public Transform slotParent;
     public GameObject slotPrefab;
-
-    [Header("Description UI")]
-    public GameObject descriptionPanelRoot;
-    public CanvasGroup descriptionCanvasGroup;
-    public Image descriptionImage;
-    public TMP_Text descriptionText;
-
-    [Header("Items (data)")]
     public List<InventoryItemData> items = new List<InventoryItemData>();
 
-    private bool menuActive = false;
-    private Coroutine fadeCoroutine;
+    private bool isOpen = false;
 
-    private InputDevice rightController;
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
-        // Debug to confirm Start is running
-        Debug.Log("InventoryManager Start() running");
-
-        // Menu starts hidden
-        if (inventoryMenu != null)
-            inventoryMenu.SetActive(false);
-
-        if (descriptionCanvasGroup != null)
-        {
-            descriptionCanvasGroup.alpha = 0f;
-            descriptionCanvasGroup.interactable = false;
-            descriptionCanvasGroup.blocksRaycasts = false;
-        }
-
-        if (descriptionImage != null) descriptionImage.sprite = null;
-        if (descriptionText != null) descriptionText.text = "";
-
+        SetMenuState(false);
         PopulateSlots();
-
-        // Get the right controller
-        Debug.Log("Attempting to get right controller...");
-        rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
     }
 
     void Update()
     {
-        // Print every frame to confirm Update is running
-        Debug.Log("UPDATE RUNNING");
-
-        // 1. Controller validity
-        Debug.Log("RIGHT VALID = " + rightController.isValid);
-
-        // If controller lost, reacquire
-        if (!rightController.isValid)
+        if (toggleButton.action.WasPressedThisFrame())
         {
-            var devices = new List<InputDevice>();
-            InputDevices.GetDevicesWithCharacteristics(
-                InputDeviceCharacteristics.Right | InputDeviceCharacteristics.Controller,
-                devices
-            );
+            if (PlacementManager.Instance.IsCarryingObject) return;
 
-            if (devices.Count > 0)
-            {
-                rightController = devices[0];
-                Debug.Log("Re-acquired right controller!");
-            }
+            isOpen = !isOpen;
+            SetMenuState(isOpen);
         }
 
-        // 2. Try reading the primary button (A)
-        bool aPressed = false;
-        bool gotValue = rightController.TryGetFeatureValue(CommonUsages.primaryButton, out aPressed);
-
-        Debug.Log($"PRIMARY GOTVALUE:{gotValue} VALUE:{aPressed}");
-
-        // Open menu when pressed
-        if (gotValue && aPressed)
+        // Always snap in front of player while open, no lerp
+        if (isOpen)
         {
-            Debug.Log("PRIMARY BUTTON TRIGGERED → TOGGLE MENU");
-            ToggleMenu();
+            SnapToPlayer();
         }
     }
 
-    private void ToggleMenu()
+    void SnapToPlayer()
     {
-        menuActive = !menuActive;
-        inventoryMenu.SetActive(menuActive);
+        if (xrCamera == null) return;
 
-        if (!menuActive && descriptionCanvasGroup)
-        {
-            if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
-            descriptionCanvasGroup.alpha = 0f;
-            descriptionCanvasGroup.interactable = false;
-            descriptionCanvasGroup.blocksRaycasts = false;
-        }
+        Vector3 forward = xrCamera.forward;
+        forward.y = 0;
+        forward.Normalize();
+
+        // If looking straight up/down fallback to transform.forward
+        if (forward.magnitude < 0.1f)
+            forward = new Vector3(xrCamera.forward.x, 0, xrCamera.forward.z).normalized;
+
+        transform.position = xrCamera.position 
+                             + forward * distanceFromPlayer 
+                             + Vector3.up * menuHeight;
+
+        transform.rotation = Quaternion.LookRotation(forward);
+        transform.Rotate(0, 180, 0);
     }
 
-    void PopulateSlots()
+    public static bool IsMenuOpen()
     {
-        if (slotParent == null || slotPrefab == null) return;
+        return Instance != null && Instance.isOpen;
+    }
 
-        for (int i = slotParent.childCount - 1; i >= 0; i--)
-            Destroy(slotParent.GetChild(i).gameObject);
+    public void PopulateSlots()
+    {
+        foreach (Transform child in slotParent)
+            Destroy(child.gameObject);
 
         foreach (var item in items)
         {
-            GameObject slotObj = Instantiate(slotPrefab, slotParent);
-            ItemSlotUI slotUI = slotObj.GetComponent<ItemSlotUI>();
-            if (slotUI != null) slotUI.Setup(item, this);
+            GameObject slot = Instantiate(slotPrefab, slotParent);
+            slot.GetComponent<ItemSlotUI>().Setup(item, this);
         }
     }
 
-    public void ShowItemDetails(InventoryItemData itemData)
+    public void SelectItem(InventoryItemData data)
     {
-        throw new System.NotImplementedException();
+        isOpen = false;
+        SetMenuState(false);
+        PlacementManager.Instance.StartPlacement(data.prefab3D);
+    }
+
+    private void SetMenuState(bool state)
+    {
+        canvasGroup.alpha = state ? 1 : 0;
+        canvasGroup.interactable = state;
+        canvasGroup.blocksRaycasts = state;
+    }
+
+    // Snaps menu in front of player when first opened
+    void PositionMenu()
+    {
+        if (xrCamera == null) return;
+
+        Vector3 forward = xrCamera.forward;
+        forward.y = 0;
+        forward.Normalize();
+
+        Vector3 targetPos = xrCamera.position
+            + forward * distanceFromPlayer
+            + Vector3.up * menuHeight;
+
+        transform.position = targetPos;
+        transform.LookAt(new Vector3(
+            xrCamera.position.x,
+            transform.position.y,
+            xrCamera.position.z));
+        transform.Rotate(0, 180, 0);
+    }
+
+    // Smoothly follows player while open
+    void FollowPlayer()
+    {
+        if (xrCamera == null) return;
+
+        Vector3 forward = xrCamera.forward;
+        forward.y = 0;
+        forward.Normalize();
+
+        Vector3 targetPos = xrCamera.position
+            + forward * distanceFromPlayer
+            + Vector3.up * menuHeight;
+
+        // Smooth follow
+        transform.position = Vector3.Lerp(
+            transform.position,
+            targetPos,
+            Time.deltaTime * 5f);
+
+        // Always face player
+        transform.LookAt(new Vector3(
+            xrCamera.position.x,
+            transform.position.y,
+            xrCamera.position.z));
+        transform.Rotate(0, 180, 0);
     }
 }

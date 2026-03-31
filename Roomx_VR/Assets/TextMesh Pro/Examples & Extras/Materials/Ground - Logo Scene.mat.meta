@@ -1,6 +1,12 @@
 fileFormatVersion: 2
-guid: c719e38f25a9480abd2480ab621a2949
+<<<<<<< HEAD
+guid: 9bd6cbe9dbbac7846b47a0941a5785d5
+=======
+guid: b638ef1cac449cd47af18af70d6974fc
+>>>>>>> origin/enton
 NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
