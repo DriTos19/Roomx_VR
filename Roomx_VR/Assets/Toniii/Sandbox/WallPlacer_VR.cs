@@ -3,31 +3,54 @@ using UnityEngine.InputSystem;
 
 public class WallPlacer_VR : MonoBehaviour
 {
-    [Header("Prefabs")]
-    public GameObject previewPrefab;
-    public GameObject realPrefab;
+    public static WallPlacer_VR Instance;
 
-    [Header("VR Controller")]
+    [Header("Controllers")]
     public Transform rightControllerTransform;
+    public Transform leftControllerTransform;
 
-    [Header("Input Actions")]
-    public InputActionProperty placeAction;
-    public InputActionProperty editAction;
+    [Header("Right Hand Input")]
+    public InputActionProperty rightPlaceAction;
+    public InputActionProperty rightInventoryGripAction;
+    public InputActionProperty rightEditAction;
+    public InputActionProperty rightHeightAdjustAction;   // NEW
     public InputActionProperty cancelAction;
-    public InputActionProperty wheelAction;
 
+    [Header("Left Hand Input")]
+    public InputActionProperty leftWheelGripAction;
+    public InputActionProperty leftApplyMaterialAction;
+    public InputActionProperty leftJoystickAction;
+    private float suppressEditUntilTime = 0f;
+    private const float EDIT_INPUT_SUPPRESS_DURATION = 0.25f;
     [Header("Placement")]
-    public float placeDistance = 4f;
-    public float maxDistance = 10f;
+    public float placeDistance = 2.2f;
+    public float minPlaceDistance = 1.0f;
+    public float maxDistance = 6.0f;
+    public float distanceAdjustSpeed = 2f;
+    public float joystickDeadzone = 0.2f;
     public float gridSize = 0.5f;
     public float surfaceOffset = 0f;
     public LayerMask placementSurfaceMask = ~0;
-    public float supportPointInset = 0.9f;
-    public float maxAllowedHeightDifference = 0.05f;
     public float overlapShrink = 0.95f;
 
+    [Header("Preview")]
+    public float controllerUpOffset = -0.02f;
+    public bool snapXZToGrid = true;
+
+    [Header("Manual Height Placement")]
+    public bool lockManualHeightXZToGrid = true;
+
+    [Header("Placed Objects")]
+    public Transform placedObjectsParent;
+    public bool autoCreatePlacedObjectsParent = true;
+
+    [Header("Safety")]
+    public bool disableScriptsOnPreview = true;
+    public bool disableScriptsOnPlacedObjects = false;
+    public bool makePreviewCollidersTriggers = true;
+
     [Header("Material Wheel")]
-    public MaterialWheelController materialWheelController;
+    public MaterialWheelManager materialWheelController;
 
     [Header("Debug")]
     public bool enableDebugLogs = true;
@@ -35,6 +58,8 @@ public class WallPlacer_VR : MonoBehaviour
     private GameObject previewInstance;
     private GameObject placedObject;
     private GameObject editSourceObject;
+    
+    private float manualHeightAdjustSpeed = 2f;
 
     private Material[] lastSavedMaterials;
     private Vector3 oldObjectPosition;
@@ -44,116 +69,168 @@ public class WallPlacer_VR : MonoBehaviour
     private bool isEditingExistingObject;
     private bool canPlaceCurrentPreview;
 
+    private InventoryItemData currentSelectedItem;
+    private Vector3 currentPlacementRotationOffset = Vector3.zero;
+
+    private bool useManualPlacementHeight = false;
+    private float manualPlacementHeight = 2.5f;
+    private float minManualPlacementHeight = 1f;
+    private float maxManualPlacementHeight = 10f;
+    
+
     private const float PREVIEW_ALPHA = 0.5f;
     private const float INVALID_PREVIEW_ALPHA = 0.2f;
 
+    public bool IsCarryingObject => isPlacing && previewInstance != null;
+    public bool IsMaterialWheelOpen => materialWheelController != null && materialWheelController.IsOpen();
+
+    void Awake()
+    {
+        Instance = this;
+        EnsurePlacedObjectsParent();
+
+        if (enableDebugLogs)
+            Debug.Log("[WallPlacer_VR] Instance set on: " + gameObject.name);
+    }
+
     void OnEnable()
     {
-        EnableAction(placeAction);
-        EnableAction(editAction);
+        EnableAction(rightPlaceAction);
+        EnableAction(rightEditAction);
         EnableAction(cancelAction);
-        EnableAction(wheelAction);
+        EnableAction(leftWheelGripAction);
+        EnableAction(leftApplyMaterialAction);
+        EnableAction(leftJoystickAction);
+        EnableAction(rightHeightAdjustAction);
     }
 
     void OnDisable()
     {
-        DisableAction(placeAction);
-        DisableAction(editAction);
+        DisableAction(rightPlaceAction);
+        DisableAction(rightEditAction);
         DisableAction(cancelAction);
-        DisableAction(wheelAction);
-    }
-
-    void Start()
-    {
-        StartPlacement();
-
-        if (enableDebugLogs)
-        {
-            Debug.Log("[WallPlacer_VR] Start");
-            Debug.Log("[WallPlacer_VR] rightControllerTransform = " + (rightControllerTransform != null ? rightControllerTransform.name : "NULL"));
-            Debug.Log("[WallPlacer_VR] placeAction = " + (placeAction.action != null ? placeAction.action.name : "NULL"));
-            Debug.Log("[WallPlacer_VR] editAction = " + (editAction.action != null ? editAction.action.name : "NULL"));
-            Debug.Log("[WallPlacer_VR] cancelAction = " + (cancelAction.action != null ? cancelAction.action.name : "NULL"));
-            Debug.Log("[WallPlacer_VR] wheelAction = " + (wheelAction.action != null ? wheelAction.action.name : "NULL"));
-        }
+        DisableAction(leftWheelGripAction);
+        DisableAction(leftApplyMaterialAction);
+        DisableAction(leftJoystickAction);
+        DisableAction(rightHeightAdjustAction);
     }
 
     void Update()
     {
-        bool vrPlace = WasPressed(placeAction);
-        bool vrEdit = WasPressed(editAction);
-        bool vrCancel = WasPressed(cancelAction);
-        bool vrWheel = WasPressed(wheelAction);
+        bool rightPlacePressed = WasPressed(rightPlaceAction);
+        bool rightEditPressed = WasPressed(rightEditAction);
+        bool cancelPressed = WasPressed(cancelAction);
+        bool leftWheelPressed = WasPressed(leftWheelGripAction);
+        bool leftApplyPressed = WasPressed(leftApplyMaterialAction);
 
-        // Handle material wheel first
-        if (materialWheelController != null && materialWheelController.IsOpen())
+        if (cancelPressed)
         {
-            if (vrCancel)
-            {
-                materialWheelController.RestoreOriginalMaterials();
-                materialWheelController.CloseWheel();
+            HandleCancel();
+            return;
+        }
 
-                if (enableDebugLogs)
-                    Debug.Log("[WallPlacer_VR] Wheel cancelled -> restored original materials");
-            }
+        if (IsMaterialWheelOpen)
+        {
+            if (leftApplyPressed)
+                TryApplyCurrentMaterialSelection();
 
+            return;
+        }
+
+        if (leftWheelPressed)
+        {
+            TryOpenMaterialWheelOnLookedObject();
             return;
         }
 
         if (isPlacing)
         {
+            AdjustPlacementDistance();
+            AdjustManualPlacementHeight();   // NEW
             UpdatePreviewPosition();
 
-            if (vrPlace && canPlaceCurrentPreview)
+            if (rightPlacePressed && canPlaceCurrentPreview)
                 PlaceObject();
-
-            if (vrCancel)
-                CancelPlacement();
-
-            if (vrWheel)
-                TryOpenMaterialWheelOnLookedObject();
         }
         else
         {
-            if (vrEdit)
+            if (rightEditPressed && Time.time >= suppressEditUntilTime)
                 TryEditObject();
-
-            if (vrWheel)
-                TryOpenMaterialWheelOnLookedObject();
         }
     }
 
-    bool WasPressed(InputActionProperty actionProperty)
+    void HandleCancel()
     {
-        return actionProperty.action != null && actionProperty.action.WasPressedThisFrame();
+        if (IsMaterialWheelOpen)
+        {
+            materialWheelController.RestoreOriginalMaterials();
+            materialWheelController.CloseWheel();
+            return;
+        }
+
+        if (InventoryManager.Instance != null && InventoryManager.IsMenuOpen())
+        {
+            InventoryManager.Instance.CloseInventory();
+            return;
+        }
+
+        if (isPlacing)
+            CancelPlacement();
     }
 
-    void EnableAction(InputActionProperty actionProperty)
+    public void StartPlacement(InventoryItemData itemData)
     {
-        if (actionProperty.action != null)
-            actionProperty.action.Enable();
+        if (itemData == null)
+        {
+            Debug.LogError("[WallPlacer_VR] itemData is NULL");
+            return;
+        }
+
+        if (itemData.prefab3D == null)
+        {
+            Debug.LogError("[WallPlacer_VR] itemData.prefab3D is NULL for item: " + itemData.GetName());
+            return;
+        }
+
+        if (rightControllerTransform == null)
+        {
+            Debug.LogError("[WallPlacer_VR] rightControllerTransform is NULL");
+            return;
+        }
+
+        currentSelectedItem = itemData;
+        currentPlacementRotationOffset = itemData.placementRotationOffset;
+
+        useManualPlacementHeight = itemData.useManualPlacementHeight;
+        manualPlacementHeight = itemData.manualPlacementHeight;
+        manualHeightAdjustSpeed = itemData.manualHeightAdjustSpeed;   // NEW
+        minManualPlacementHeight = itemData.minManualPlacementHeight;
+        maxManualPlacementHeight = itemData.maxManualPlacementHeight;
+
+        
+
+        lastSavedMaterials = null;
+        isEditingExistingObject = false;
+        editSourceObject = null;
+        SuppressEditInputTemporarily();
+        StartPlacementInternal(itemData.prefab3D);
     }
 
-    void DisableAction(InputActionProperty actionProperty)
-    {
-        if (actionProperty.action != null)
-            actionProperty.action.Disable();
-    }
-
-    void StartPlacement()
+    void StartPlacementInternal(GameObject prefab)
     {
         DestroyIfExists(previewInstance);
         DestroyIfExists(editSourceObject);
 
-        if (previewPrefab == null)
-        {
-            Debug.LogError("[WallPlacer_VR] previewPrefab is NULL");
-            return;
-        }
-
-        previewInstance = Instantiate(previewPrefab);
-        previewInstance.name = previewPrefab.name + "_Preview";
+        previewInstance = Instantiate(prefab);
+        previewInstance.name = prefab.name + "_Preview";
         previewInstance.SetActive(true);
+
+        if (disableScriptsOnPreview)
+            DisableBehavioursForPreview(previewInstance);
+
+        if (makePreviewCollidersTriggers)
+            ConvertPreviewCollidersToTriggers(previewInstance);
+
         MakePreviewTransparent(previewInstance, PREVIEW_ALPHA);
 
         isPlacing = true;
@@ -163,129 +240,162 @@ public class WallPlacer_VR : MonoBehaviour
 
         if (enableDebugLogs)
             Debug.Log("[WallPlacer_VR] Preview created: " + previewInstance.name);
+
+        UpdatePreviewPosition();
+    }
+
+    void AdjustPlacementDistance()
+    {
+        if (leftJoystickAction.action == null)
+            return;
+
+        Vector2 joystickValue = leftJoystickAction.action.ReadValue<Vector2>();
+        float y = joystickValue.y;
+
+        if (Mathf.Abs(y) < joystickDeadzone)
+            return;
+
+        placeDistance += y * distanceAdjustSpeed * Time.deltaTime;
+        placeDistance = Mathf.Clamp(placeDistance, minPlaceDistance, maxDistance);
+    }
+    
+    void AdjustManualPlacementHeight()
+    {
+        if (!isPlacing || !useManualPlacementHeight)
+            return;
+
+        if (rightHeightAdjustAction.action == null)
+            return;
+
+        Vector2 joystickValue = rightHeightAdjustAction.action.ReadValue<Vector2>();
+        float y = joystickValue.y;
+
+        if (Mathf.Abs(y) < joystickDeadzone)
+            return;
+
+        manualPlacementHeight += y * manualHeightAdjustSpeed * Time.deltaTime;
+        manualPlacementHeight = Mathf.Clamp(manualPlacementHeight, minManualPlacementHeight, maxManualPlacementHeight);
+
+        if (currentSelectedItem != null)
+            currentSelectedItem.manualPlacementHeight = manualPlacementHeight;
     }
 
     void UpdatePreviewPosition()
     {
-        if (previewInstance == null)
+        if (previewInstance == null || rightControllerTransform == null)
             return;
-
-        if (rightControllerTransform == null)
-        {
-            Debug.LogError("[WallPlacer_VR] rightControllerTransform is NULL");
-            return;
-        }
 
         Bounds localBounds = GetLocalObjectBounds(previewInstance);
         float bottomToPivotOffset = GetBottomToPivotOffset(localBounds, previewInstance.transform.lossyScale);
 
-        Vector3 targetPos = rightControllerTransform.position + rightControllerTransform.forward * placeDistance;
+        Vector3 rawTargetPos =
+            rightControllerTransform.position +
+            rightControllerTransform.forward * placeDistance +
+            rightControllerTransform.up * controllerUpOffset;
 
-        // PREVIEW MOVEMENT IS DIRECTLY BASED ON SNAP TO GRID
-        Vector3 snappedTargetPos = SnapToGrid(targetPos);
+        Vector3 targetPos = rawTargetPos;
 
-        // Always move preview to the snapped X/Z position.
-        // Y is solved from the surface if possible.
-        previewInstance.transform.rotation = Quaternion.identity;
+        if (snapXZToGrid)
+            targetPos = SnapToGridXZ(targetPos);
 
-        if (TryGetStablePlacementPosition(snappedTargetPos, localBounds, bottomToPivotOffset, out Vector3 solvedPos, out GameObject supportObject))
+        previewInstance.transform.rotation = Quaternion.Euler(currentPlacementRotationOffset);
+
+        if (useManualPlacementHeight)
+        {
+            Vector3 manualPos = new Vector3(
+                targetPos.x,
+                manualPlacementHeight + bottomToPivotOffset + surfaceOffset,
+                targetPos.z
+            );
+
+            if (lockManualHeightXZToGrid)
+                manualPos = new Vector3(SnapToGridValue(manualPos.x), manualPos.y, SnapToGridValue(manualPos.z));
+
+            previewInstance.transform.position = manualPos;
+            canPlaceCurrentPreview = true;
+            SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
+            return;
+        }
+
+        if (TryGetStablePlacementPosition(targetPos, localBounds, bottomToPivotOffset, out Vector3 solvedPos, out _))
         {
             previewInstance.transform.position = solvedPos;
             canPlaceCurrentPreview = true;
             SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
-
-            if (enableDebugLogs && supportObject != null)
-                Debug.Log("[WallPlacer_VR] Stable support: " + supportObject.name);
         }
         else
         {
-            // Still follow snapped grid position even when invalid.
-            // Use fallback Y so the preview continues to visually follow the grid.
-            Vector3 fallbackPos = new Vector3(
-                snappedTargetPos.x,
-                snappedTargetPos.y,
-                snappedTargetPos.z
-            );
-
-            previewInstance.transform.position = fallbackPos;
+            previewInstance.transform.position = targetPos;
             canPlaceCurrentPreview = false;
             SetPreviewAlpha(previewInstance, INVALID_PREVIEW_ALPHA);
-
-            if (enableDebugLogs)
-                Debug.Log("[WallPlacer_VR] Invalid placement, but preview still follows snapped grid");
         }
     }
 
     bool TryGetStablePlacementPosition(Vector3 targetPos, Bounds localBounds, float bottomToPivotOffset, out Vector3 finalPos, out GameObject supportObject)
-{
-    finalPos = targetPos;
-    supportObject = null;
-
-    Vector3 scaledExtents = Vector3.Scale(localBounds.extents, previewInstance.transform.lossyScale);
-    Vector3 centerOffset = GetBoundsCenterOffset(localBounds, previewInstance.transform.lossyScale);
-
-    // Box area used to detect what is below the preview.
-    Vector3 boxHalfExtents = new Vector3(
-        Mathf.Max(scaledExtents.x * 0.95f, 0.01f),
-        0.05f,
-        Mathf.Max(scaledExtents.z * 0.95f, 0.01f)
-    );
-
-    // Start from above and scan downward to find support below the preview footprint.
-    Vector3 boxCenter = new Vector3(
-        targetPos.x + centerOffset.x,
-        maxDistance,
-        targetPos.z + centerOffset.z
-    );
-
-    Collider[] hits = Physics.OverlapBox(
-        boxCenter,
-        new Vector3(boxHalfExtents.x, maxDistance, boxHalfExtents.z),
-        Quaternion.identity,
-        placementSurfaceMask
-    );
-
-    Collider bestSupportCollider = null;
-    float bestTopY = float.NegativeInfinity;
-
-    foreach (Collider col in hits)
     {
-        if (col == null)
-            continue;
+        finalPos = targetPos;
+        supportObject = null;
 
-        GameObject root = col.transform.root.gameObject;
+        Vector3 scaledExtents = Vector3.Scale(localBounds.extents, previewInstance.transform.lossyScale);
+        Vector3 centerOffset = GetBoundsCenterOffset(localBounds, previewInstance.transform.lossyScale);
 
-        if (root == previewInstance || root == gameObject)
-            continue;
+        Vector3 halfExtents = new Vector3(
+            Mathf.Max(scaledExtents.x * 0.95f, 0.01f),
+            0.05f,
+            Mathf.Max(scaledExtents.z * 0.95f, 0.01f)
+        );
 
-        float topY = col.bounds.max.y;
+        Vector3 boxCenter = new Vector3(
+            targetPos.x + centerOffset.x,
+            maxDistance,
+            targetPos.z + centerOffset.z
+        );
 
-        // We only care about colliders below the desired target region.
-        if (topY <= maxDistance && topY > bestTopY)
+        Collider[] hits = Physics.OverlapBox(
+            boxCenter,
+            new Vector3(halfExtents.x, maxDistance, halfExtents.z),
+            Quaternion.identity,
+            placementSurfaceMask
+        );
+
+        Collider bestSupportCollider = null;
+        float bestTopY = float.NegativeInfinity;
+
+        foreach (Collider col in hits)
         {
-            bestTopY = topY;
-            bestSupportCollider = col;
+            if (col == null)
+                continue;
+
+            GameObject root = GetPlacedObjectRoot(col.transform);
+            if (root == previewInstance || root == gameObject)
+                continue;
+
+            float topY = col.bounds.max.y;
+
+            if (topY <= maxDistance && topY > bestTopY)
+            {
+                bestTopY = topY;
+                bestSupportCollider = col;
+            }
         }
+
+        if (bestSupportCollider == null)
+            return false;
+
+        supportObject = bestSupportCollider.transform.root.gameObject;
+
+        Vector3 candidatePos = new Vector3(
+            targetPos.x,
+            bestSupportCollider.bounds.max.y + bottomToPivotOffset + surfaceOffset,
+            targetPos.z
+        );
+
+        if (WouldOverlapAtPosition(candidatePos, localBounds, supportObject))
+            return false;
+
+        finalPos = candidatePos;
+        return true;
     }
-
-    if (bestSupportCollider == null)
-        return false;
-
-    supportObject = bestSupportCollider.transform.root.gameObject;
-
-    // Place preview so its collider bottom sits exactly on support collider top.
-    Vector3 candidatePos = new Vector3(
-        targetPos.x,
-        bestSupportCollider.bounds.max.y + bottomToPivotOffset + surfaceOffset,
-        targetPos.z
-    );
-
-    if (WouldOverlapAtPosition(candidatePos, localBounds, supportObject))
-        return false;
-
-    finalPos = candidatePos;
-    return true;
-}
 
     bool WouldOverlapAtPosition(Vector3 candidatePos, Bounds localBounds, GameObject supportObject)
     {
@@ -307,15 +417,13 @@ public class WallPlacer_VR : MonoBehaviour
             if (col == null)
                 continue;
 
-            GameObject root = col.transform.root.gameObject;
-
+            GameObject root = GetPlacedObjectRoot(col.transform);
             if (root == null)
                 continue;
 
             if (root == previewInstance || root == gameObject)
                 continue;
 
-            // Ignore the support object because stacking should touch it.
             if (root == supportObject)
                 continue;
 
@@ -330,21 +438,41 @@ public class WallPlacer_VR : MonoBehaviour
         if (previewInstance == null || !canPlaceCurrentPreview)
             return;
 
-        GameObject source = realPrefab;
+        GameObject source = currentSelectedItem != null ? currentSelectedItem.prefab3D : null;
 
         if (isEditingExistingObject && editSourceObject != null)
             source = editSourceObject;
 
         if (source == null)
         {
-            Debug.LogError("[WallPlacer_VR] source is NULL");
+            Debug.LogError("[WallPlacer_VR] PlaceObject failed: source is null");
             return;
         }
 
-        placedObject = Instantiate(source, previewInstance.transform.position, Quaternion.identity);
+        // Safety: do not allow cloning scene container/prefab asset by mistake
+        if (source.name.Contains("PlacedObjects"))
+        {
+            Debug.LogError("[WallPlacer_VR] Refusing to place source because it looks like a container object: " + source.name);
+            return;
+        }
+
+        EnsurePlacedObjectsParent();
+
+        placedObject = Instantiate(source, previewInstance.transform.position, previewInstance.transform.rotation);
+
+        if (placedObjectsParent != null)
+            placedObject.transform.SetParent(placedObjectsParent, true);
+
         placedObject.SetActive(true);
 
-        ApplySavedMaterials(placedObject, false);
+        if (disableScriptsOnPlacedObjects)
+            DisableBehavioursForPlacedObject(placedObject);
+
+        if (isEditingExistingObject)
+            ApplySavedMaterials(placedObject, false);
+
+        if (enableDebugLogs)
+            Debug.Log("[WallPlacer_VR] Placed object: " + placedObject.name);
 
         DestroyIfExists(previewInstance);
         DestroyIfExists(editSourceObject);
@@ -352,34 +480,27 @@ public class WallPlacer_VR : MonoBehaviour
         isPlacing = false;
         isEditingExistingObject = false;
         canPlaceCurrentPreview = false;
-
-        if (enableDebugLogs)
-            Debug.Log("[WallPlacer_VR] Object placed at " + placedObject.transform.position);
+        lastSavedMaterials = null;
+        useManualPlacementHeight = false;
+        SuppressEditInputTemporarily();
     }
 
     void TryEditObject()
     {
         if (rightControllerTransform == null)
-        {
-            Debug.LogError("[WallPlacer_VR] Cannot edit: rightControllerTransform is NULL");
             return;
-        }
 
         Ray ray = new Ray(rightControllerTransform.position, rightControllerTransform.forward);
 
         if (!Physics.Raycast(ray, out RaycastHit hit, maxDistance) || hit.collider == null)
             return;
 
-        GameObject target = hit.collider.transform.root.gameObject;
-
+        GameObject target = GetPlacedObjectRoot(hit.collider.transform);
         if (target == gameObject || target == previewInstance)
             return;
 
         if (target.CompareTag("Floor"))
-        {
-            Debug.Log("[WallPlacer_VR] Floor cannot be edited.");
             return;
-        }
 
         Renderer rend = target.GetComponentInChildren<Renderer>();
         if (rend == null)
@@ -398,31 +519,33 @@ public class WallPlacer_VR : MonoBehaviour
         previewInstance.name = target.name + "_Preview";
         previewInstance.SetActive(true);
 
+        if (disableScriptsOnPreview)
+            DisableBehavioursForPreview(previewInstance);
+
+        if (makePreviewCollidersTriggers)
+            ConvertPreviewCollidersToTriggers(previewInstance);
+
         MakePreviewTransparent(previewInstance, PREVIEW_ALPHA);
         ApplySavedMaterials(previewInstance, true);
-
-        Destroy(target);
 
         isPlacing = true;
         isEditingExistingObject = true;
         canPlaceCurrentPreview = false;
 
-        if (enableDebugLogs)
-            Debug.Log("[WallPlacer_VR] Editing object: " + previewInstance.name);
+        Destroy(target);
     }
 
     void TryOpenMaterialWheelOnLookedObject()
     {
-        if (materialWheelController == null || rightControllerTransform == null)
+        if (materialWheelController == null || leftControllerTransform == null)
             return;
 
-        Ray ray = new Ray(rightControllerTransform.position, rightControllerTransform.forward);
+        Ray ray = new Ray(leftControllerTransform.position, leftControllerTransform.forward);
 
         if (!Physics.Raycast(ray, out RaycastHit hit, maxDistance) || hit.collider == null)
             return;
 
-        GameObject target = hit.collider.transform.root.gameObject;
-
+        GameObject target = GetPlacedObjectRoot(hit.collider.transform);
         if (target == gameObject || target == previewInstance)
             return;
 
@@ -430,22 +553,16 @@ public class WallPlacer_VR : MonoBehaviour
         if (rend == null)
             return;
 
-        // 🔴 SAVE ORIGINAL MATERIALS
         lastSavedMaterials = rend.materials;
-
         materialWheelController.SelectObject(rend);
         materialWheelController.OpenWheel(0);
     }
-    
-    void CloseMaterialWheelWithoutApplying()
+
+    void TryApplyCurrentMaterialSelection()
     {
-        if (materialWheelController == null)
+        if (materialWheelController == null || !materialWheelController.IsOpen())
             return;
 
-        // 🔴 restore original materials
-        materialWheelController.RestoreOriginalMaterials();
-
-        // 🔴 close the wheel
         materialWheelController.CloseWheel();
     }
 
@@ -465,9 +582,106 @@ public class WallPlacer_VR : MonoBehaviour
         isPlacing = false;
         isEditingExistingObject = false;
         canPlaceCurrentPreview = false;
+        lastSavedMaterials = null;
+        useManualPlacementHeight = false;
+        SuppressEditInputTemporarily();
+    }
 
-        if (enableDebugLogs)
-            Debug.Log("[WallPlacer_VR] Placement cancelled");
+    void EnsurePlacedObjectsParent()
+    {
+        if (placedObjectsParent != null)
+        {
+            // If someone assigned a prefab asset instead of a scene object, ignore it
+            if (!placedObjectsParent.gameObject.scene.IsValid())
+            {
+                Debug.LogWarning("[WallPlacer_VR] placedObjectsParent was assigned to a prefab asset. Clearing it.");
+                placedObjectsParent = null;
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        if (!autoCreatePlacedObjectsParent)
+            return;
+
+        GameObject root = GameObject.Find("PlacedObjects");
+        if (root == null)
+            root = new GameObject("PlacedObjects");
+
+        placedObjectsParent = root.transform;
+    }
+
+    void DisableBehavioursForPreview(GameObject obj)
+    {
+        MonoBehaviour[] behaviours = obj.GetComponentsInChildren<MonoBehaviour>(true);
+
+        foreach (MonoBehaviour behaviour in behaviours)
+        {
+            if (behaviour == null)
+                continue;
+
+            if (behaviour == this)
+                continue;
+
+            behaviour.enabled = false;
+        }
+    }
+
+    void DisableBehavioursForPlacedObject(GameObject obj)
+    {
+        MonoBehaviour[] behaviours = obj.GetComponentsInChildren<MonoBehaviour>(true);
+
+        foreach (MonoBehaviour behaviour in behaviours)
+        {
+            if (behaviour == null)
+                continue;
+
+            behaviour.enabled = false;
+        }
+    }
+
+    void ConvertPreviewCollidersToTriggers(GameObject obj)
+    {
+        Collider[] colliders = obj.GetComponentsInChildren<Collider>(true);
+
+        foreach (Collider col in colliders)
+        {
+            if (col == null)
+                continue;
+
+            MeshCollider meshCol = col as MeshCollider;
+            if (meshCol != null)
+            {
+                if (!meshCol.convex)
+                {
+                    if (enableDebugLogs)
+                        Debug.LogWarning($"[WallPlacer_VR] Skipping trigger conversion for concave MeshCollider on {meshCol.gameObject.name}", meshCol);
+
+                    continue;
+                }
+            }
+
+            col.isTrigger = true;
+        }
+    }
+
+    bool WasPressed(InputActionProperty actionProperty)
+    {
+        return actionProperty.action != null && actionProperty.action.WasPressedThisFrame();
+    }
+
+    void EnableAction(InputActionProperty actionProperty)
+    {
+        if (actionProperty.action != null)
+            actionProperty.action.Enable();
+    }
+
+    void DisableAction(InputActionProperty actionProperty)
+    {
+        if (actionProperty.action != null)
+            actionProperty.action.Disable();
     }
 
     Bounds GetLocalObjectBounds(GameObject obj)
@@ -476,25 +690,17 @@ public class WallPlacer_VR : MonoBehaviour
 
         if (colliders.Length > 0)
         {
-            Bounds bounds = new Bounds(
-                obj.transform.InverseTransformPoint(colliders[0].bounds.center),
-                Vector3.zero
-            );
+            Bounds bounds = new Bounds(obj.transform.InverseTransformPoint(colliders[0].bounds.center), Vector3.zero);
 
             foreach (Collider c in colliders)
             {
                 Bounds worldBounds = c.bounds;
-
                 Vector3 localCenter = obj.transform.InverseTransformPoint(worldBounds.center);
                 Vector3 localSize = obj.transform.InverseTransformVector(worldBounds.size);
 
                 Bounds localBounds = new Bounds(
                     localCenter,
-                    new Vector3(
-                        Mathf.Abs(localSize.x),
-                        Mathf.Abs(localSize.y),
-                        Mathf.Abs(localSize.z)
-                    )
+                    new Vector3(Mathf.Abs(localSize.x), Mathf.Abs(localSize.y), Mathf.Abs(localSize.z))
                 );
 
                 bounds.Encapsulate(localBounds.min);
@@ -508,25 +714,17 @@ public class WallPlacer_VR : MonoBehaviour
 
         if (renderers.Length > 0)
         {
-            Bounds bounds = new Bounds(
-                obj.transform.InverseTransformPoint(renderers[0].bounds.center),
-                Vector3.zero
-            );
+            Bounds bounds = new Bounds(obj.transform.InverseTransformPoint(renderers[0].bounds.center), Vector3.zero);
 
             foreach (Renderer r in renderers)
             {
                 Bounds worldBounds = r.bounds;
-
                 Vector3 localCenter = obj.transform.InverseTransformPoint(worldBounds.center);
                 Vector3 localSize = obj.transform.InverseTransformVector(worldBounds.size);
 
                 Bounds localBounds = new Bounds(
                     localCenter,
-                    new Vector3(
-                        Mathf.Abs(localSize.x),
-                        Mathf.Abs(localSize.y),
-                        Mathf.Abs(localSize.z)
-                    )
+                    new Vector3(Mathf.Abs(localSize.x), Mathf.Abs(localSize.y), Mathf.Abs(localSize.z))
                 );
 
                 bounds.Encapsulate(localBounds.min);
@@ -567,6 +765,27 @@ public class WallPlacer_VR : MonoBehaviour
         }
 
         rend.materials = mats;
+    }
+    
+    GameObject GetPlacedObjectRoot(Transform hitTransform)
+    {
+        if (hitTransform == null)
+            return null;
+
+        if (placedObjectsParent != null)
+        {
+            Transform current = hitTransform;
+
+            while (current != null)
+            {
+                if (current.parent == placedObjectsParent)
+                    return current.gameObject;
+
+                current = current.parent;
+            }
+        }
+
+        return hitTransform.root.gameObject;
     }
 
     void MakePreviewTransparent(GameObject obj, float alpha)
@@ -615,12 +834,20 @@ public class WallPlacer_VR : MonoBehaviour
             r.materials = mats;
         }
     }
-
-    Vector3 SnapToGrid(Vector3 pos)
+    void SuppressEditInputTemporarily()
     {
-        pos.x = Mathf.Round(pos.x / gridSize) * gridSize;
-        pos.z = Mathf.Round(pos.z / gridSize) * gridSize;
+        suppressEditUntilTime = Time.time + EDIT_INPUT_SUPPRESS_DURATION;
+    }
+    Vector3 SnapToGridXZ(Vector3 pos)
+    {
+        pos.x = SnapToGridValue(pos.x);
+        pos.z = SnapToGridValue(pos.z);
         return pos;
+    }
+
+    float SnapToGridValue(float value)
+    {
+        return Mathf.Round(value / gridSize) * gridSize;
     }
 
     Vector3 GetBoundsCenterOffset(Bounds localBounds, Vector3 lossyScale)
@@ -637,32 +864,6 @@ public class WallPlacer_VR : MonoBehaviour
         float bottomLocalY = localBounds.min.y;
         float bottomWorldY = bottomLocalY * lossyScale.y;
         return -bottomWorldY;
-    }
-
-    void OpenMaterialWheelForPreview()
-    {
-        if (materialWheelController == null || previewInstance == null)
-            return;
-
-        Renderer rend = previewInstance.GetComponentInChildren<Renderer>();
-        if (rend == null)
-            return;
-
-        materialWheelController.SelectObject(rend);
-        materialWheelController.OpenWheel(0);
-    }
-
-    void OpenMaterialWheelForPlacedObject()
-    {
-        if (materialWheelController == null || placedObject == null)
-            return;
-
-        Renderer rend = placedObject.GetComponentInChildren<Renderer>();
-        if (rend == null)
-            return;
-
-        materialWheelController.SelectObject(rend);
-        materialWheelController.OpenWheel(0);
     }
 
     void DestroyIfExists(GameObject obj)
