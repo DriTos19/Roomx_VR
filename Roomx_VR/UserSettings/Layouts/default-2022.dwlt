@@ -271,8 +271,8 @@ MonoBehaviour:
     y: 0
     width: 1091
     height: 515
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 201, y: 221}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 14}
   m_Panes:
   - {fileID: 14}
@@ -862,7 +862,7 @@ MonoBehaviour:
   m_Rotation:
     m_Target: {x: -0.11551725, y: 0.032793332, z: -0.0036294158, w: -0.99294686}
     speed: 2
-    m_Value: {x: -0.115495525, y: 0.032787163, z: -0.003628733, w: -0.9927601}
+    m_Value: {x: -0.11551726, y: 0.032793332, z: -0.003629416, w: -0.9929469}
   m_Size:
     m_Target: 3.8378315
     speed: 2
@@ -998,9 +998,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 78f0ffff
-      m_LastClickedID: -3976
-      m_ExpandedIDs: 7af0ffff02f2ffff0cf3ffff68f3fffff0f4ffffdaf6ffff6ef7ffff02f8ffff8af8ffff18fbffff
+      m_SelectedIDs: b8700000
+      m_LastClickedID: 0
+      m_ExpandedIDs: 24fbffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -1157,7 +1157,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 114}
     m_SelectedIDs: 72850000
     m_LastClickedID: 34162
-    m_ExpandedIDs: 00000000a07400009e7e0000a07e0000a27e0000a47e0000a67e0000a87e0000aa7e0000ac7e0000ae7e0000b07e0000b27e0000b47e0000b67e0000b87e0000ba7e0000bc7e0000be7e0000c07e0000c27e0000c47e0000c67e0000c87e0000
+    m_ExpandedIDs: 000000009a740000987e00009a7e00009c7e00009e7e0000a07e0000a27e0000a47e0000a67e0000a87e0000aa7e0000ac7e0000ae7e0000b07e0000b27e0000b47e0000b67e0000b87e0000ba7e0000bc7e0000be7e0000c07e0000c27e0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1182,24 +1182,24 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_AssetTreeState:
-    scrollPos: {x: 0, y: 2400}
+    scrollPos: {x: 0, y: 1812}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: ffffffff00000000a07400009e7e0000a07e0000a27e0000a47e0000a67e0000a87e0000aa7e0000ac7e0000ae7e0000b07e0000b27e0000b47e0000b67e0000b87e0000ba7e0000bc7e0000be7e0000c07e0000c27e0000c47e0000c67e0000c87e0000
+    m_ExpandedIDs: ffffffff000000009a740000987e00009a7e00009c7e00009e7e0000a07e0000a27e0000a47e0000a67e0000a87e0000aa7e0000ac7e0000ae7e0000b07e0000b27e0000b47e0000b67e0000b87e0000ba7e0000bc7e0000be7e0000c07e0000c27e0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: House3
-      m_OriginalName: House3
+      m_Name: 
+      m_OriginalName: 
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 32780
+      m_UserData: 0
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 0
+      m_OriginalEventType: 11
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 12}
     m_SearchString: 
