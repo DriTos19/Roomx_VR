@@ -27,12 +27,19 @@ public class PlacementManager : MonoBehaviour
     private float currentRotation = 0f;
     private bool isValid = false;
     private bool canPlaceThisFrame = false;
+    private string currentPrefabPath = null;
 
     public bool IsCarryingObject => isPlacing;
 
     void Awake() 
     { 
         if (Instance == null) Instance = this; 
+    }
+
+    public void StartPlacement(GameObject prefab, string prefabPath)
+    {
+        currentPrefabPath = prefabPath;
+        StartPlacement(prefab);
     }
 
     public void StartPlacement(GameObject prefab)
@@ -136,8 +143,17 @@ public class PlacementManager : MonoBehaviour
         int furnLayer = LayerMask.NameToLayer("Furniture");
         if (furnLayer != -1) SetLayerRecursively(ghostObject, furnLayer);
 
+        // Register with save system
+        FurniturePrefabReference prefabRef = ghostObject.GetComponent<FurniturePrefabReference>();
+        if (prefabRef == null) prefabRef = ghostObject.AddComponent<FurniturePrefabReference>();
+        if (currentPrefabPath != null) prefabRef.prefabPath = currentPrefabPath;
+
+        if (FurnitureSaveManager.Instance != null)
+            FurnitureSaveManager.Instance.RegisterFurniture(ghostObject);
+
         ghostObject = null;
         isPlacing = false;
+        currentPrefabPath = null;
         Debug.Log("Objekt erfolgreich platziert!");
     }
 
