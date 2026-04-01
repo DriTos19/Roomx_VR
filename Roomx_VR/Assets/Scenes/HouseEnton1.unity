@@ -2409,9 +2409,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1.432, y: -0.05}
+  m_AnchoredPosition: {x: -1.7469997, y: 0.10750008}
   m_SizeDelta: {x: 700, y: 350}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0.35, y: 0.65}
 --- !u!225 &747486283
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -2464,6 +2464,9 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -6395602842196007441, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  distanceFromPlayer: 1.3
+  menuHeightOffset: 0.2
+  menuWidthOffset: 0
   allItems:
   - {fileID: 11400000, guid: 2f977c6216120eb42b4bc803a736d7f7, type: 2}
   - {fileID: 11400000, guid: b3c749e19ce6a2f4fbf6106125fc5269, type: 2}
@@ -6109,7 +6112,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6598815579406187037, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
