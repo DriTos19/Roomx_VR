@@ -3,7 +3,12 @@ guid: e6f0925ce7da38644907bd0d4bdec586
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: kolltuk
+    second: {fileID: 2100000, guid: 33ac146e67c354c429a864b85b49bc96, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
