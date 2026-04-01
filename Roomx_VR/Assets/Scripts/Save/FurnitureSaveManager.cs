@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +29,7 @@ public class FurnitureSaveManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        savePath = Application.persistentDataPath + "/furniture_data.json";
+        savePath = Application.persistentDataPath + "/" + SceneManager.GetActiveScene().name + "_furniture.json";
     }
 
     void Start()
