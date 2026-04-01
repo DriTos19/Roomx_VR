@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.InputSystem;
@@ -28,6 +29,9 @@ public class PlacementManager : MonoBehaviour
     private bool isValid = false;
     private bool canPlaceThisFrame = false;
 
+    private InventoryItemData _currentItemData;
+    private Dictionary<Renderer, Material[]> _originalMaterials = new Dictionary<Renderer, Material[]>();
+
     public bool IsCarryingObject => isPlacing;
 
     void Awake() 
@@ -35,12 +39,13 @@ public class PlacementManager : MonoBehaviour
         if (Instance == null) Instance = this; 
     }
 
-    public void StartPlacement(GameObject prefab)
+    public void StartPlacement(InventoryItemData item)
     {
+        if (item == null || item.prefab3D == null) return;
         if (isPlacing) CancelPlacement();
-        if (prefab == null) return;
 
-        ghostObject = Instantiate(prefab);
+        _currentItemData = item;
+        ghostObject = Instantiate(item.prefab3D);
         PrepareGhost();
         canPlaceThisFrame = false; // Verhindert Sofort-Platzierung beim Menüklick
     }
@@ -48,6 +53,16 @@ public class PlacementManager : MonoBehaviour
     public void PickUpFurniture(GameObject furniture)
     {
         if (isPlacing || furniture == null) return;
+
+        // Read back the item data so FinalizePlacement can re-stamp it
+        FurniturePrefabReference existingRef = furniture.GetComponent<FurniturePrefabReference>();
+        _currentItemData = existingRef != null ? existingRef.itemData : null;
+
+        // Save renderer materials before PrepareGhost overwrites them
+        foreach (Renderer rend in furniture.GetComponentsInChildren<Renderer>())
+            _originalMaterials[rend] = rend.materials;
+
+        FurnitureSaveManager.Instance?.UnregisterFurniture(furniture);
 
         ghostObject = furniture;
         PrepareGhost();
@@ -129,6 +144,8 @@ public class PlacementManager : MonoBehaviour
     {
         if (ghostObject == null) return;
 
+        RestoreOriginalMaterials();
+
         foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
             col.enabled = true;
 
@@ -136,6 +153,18 @@ public class PlacementManager : MonoBehaviour
         int furnLayer = LayerMask.NameToLayer("Furniture");
         if (furnLayer != -1) SetLayerRecursively(ghostObject, furnLayer);
 
+        // Stamp the asset reference so the save manager can serialize it
+        FurniturePrefabReference prefabRef = ghostObject.GetComponent<FurniturePrefabReference>();
+        if (prefabRef == null) prefabRef = ghostObject.AddComponent<FurniturePrefabReference>();
+        if (_currentItemData != null)
+        {
+            prefabRef.prefabPath = _currentItemData.name;
+            prefabRef.itemData   = _currentItemData;
+        }
+
+        FurnitureSaveManager.Instance?.RegisterFurniture(ghostObject);
+
+        _currentItemData = null;
         ghostObject = null;
         isPlacing = false;
         Debug.Log("Objekt erfolgreich platziert!");
@@ -143,6 +172,7 @@ public class PlacementManager : MonoBehaviour
 
     public void CancelPlacement()
     {
+        RestoreOriginalMaterials();
         if (ghostObject != null) 
         {
             Destroy(ghostObject);
@@ -150,6 +180,7 @@ public class PlacementManager : MonoBehaviour
         }
         ghostObject = null;
         isPlacing = false;
+        _currentItemData = null;
     }
 
     void ApplyMaterial(Material mat)
@@ -158,8 +189,19 @@ public class PlacementManager : MonoBehaviour
         MeshRenderer[] renderers = ghostObject.GetComponentsInChildren<MeshRenderer>();
         foreach (var rend in renderers)
         {
-            if (rend != null) rend.material = mat;
+            if (rend == null) continue;
+            // Save originals before overwriting for the first time
+            if (!_originalMaterials.ContainsKey(rend))
+                _originalMaterials[rend] = rend.materials;
+            rend.material = mat;
         }
+    }
+
+    private void RestoreOriginalMaterials()
+    {
+        foreach (var kvp in _originalMaterials)
+            if (kvp.Key != null) kvp.Key.materials = kvp.Value;
+        _originalMaterials.Clear();
     }
 
     void SetLayerRecursively(GameObject obj, int newLayer)

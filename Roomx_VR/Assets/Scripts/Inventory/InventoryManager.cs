@@ -123,7 +123,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (data != null && data.prefab3D != null)
         {
-            PlacementManager.Instance.StartPlacement(data.prefab3D);
+            PlacementManager.Instance.StartPlacement(data);
             SetMenuState(false);
         }
     }
