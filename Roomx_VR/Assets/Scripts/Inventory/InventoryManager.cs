@@ -19,7 +19,7 @@ public class InventoryManager : MonoBehaviour
     public InputActionProperty uiPressAction;    
 
     [Header("Menu Settings")]
-    public float distanceFromPlayer = 1.3f;
+    public float distanceFromPlayer = 1.2f;
     public float menuHeightOffset = -0.2f;
     public float menuWidthOffset = 0f; 
 
@@ -40,10 +40,7 @@ public class InventoryManager : MonoBehaviour
 
     private bool isMenuOpen = false;
 
-    void Awake()
-    {
-        Instance = this;
-    }
+    void Awake() { Instance = this; }
 
     void Start()
     {
@@ -60,64 +57,32 @@ public class InventoryManager : MonoBehaviour
         {
             isMenuOpen = !isMenuOpen;
             SetMenuState(isMenuOpen);
-            
-            // NEU: Beim Öffnen sofort einmal hart zentrieren
-            if(isMenuOpen) SnapToFront(); 
-            
             if(!isMenuOpen) HideTooltip();
         }
-
         if (isMenuOpen && xrCamera != null) FollowCamera();
-    }
-
-    // Harte Zentrierung beim ersten Öffnen
-    private void SnapToFront()
-    {
-        Vector3 cameraPos = xrCamera.position;
-        Vector3 cameraForward = xrCamera.forward;
-        cameraForward.y = 0;
-        cameraForward.Normalize();
-
-        transform.position = cameraPos + (cameraForward * distanceFromPlayer);
-        transform.position += new Vector3(0, menuHeightOffset, 0);
     }
 
     private void FollowCamera()
     {
-        // 1. Wir holen uns die Kameraposition und die Blickrichtung
         Vector3 cameraPos = xrCamera.position;
         Vector3 cameraForward = xrCamera.forward;
         Vector3 cameraRight = xrCamera.right;
 
-        // 2. WICHTIG: Wir nullen die Y-Achse für die Richtungsvektoren
-        // Dadurch bleibt die Bewegung rein horizontal (kein Wandern auf der Z-Achse bei Kopfneigung)
         cameraForward.y = 0;
         cameraRight.y = 0;
         cameraForward.Normalize();
         cameraRight.Normalize();
 
-        // 3. Zielposition berechnen:
-        // Wir nehmen die Bodenposition unter der Kamera und gehen von dort "vor" und "seitlich"
         Vector3 targetPosition = cameraPos + (cameraForward * distanceFromPlayer) + (cameraRight * menuWidthOffset);
-    
-        // Die Höhe setzen wir absolut zur Kamera-Y-Position
         targetPosition.y = cameraPos.y + menuHeightOffset;
 
-        // 4. Sanftes Folgen (Lerp) für den professionellen Look
         transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * 10f);
-    
-        // 5. Rotation: Das Menü schaut dich immer direkt an, bleibt aber senkrecht
+        
         Vector3 lookDirection = transform.position - cameraPos;
-        lookDirection.y = 0; // Verhindert, dass das Menü nach hinten kippt
-    
-        if (lookDirection != Vector3.zero)
-        {
-            transform.rotation = Quaternion.LookRotation(lookDirection);
-        }
+        lookDirection.y = 0; 
+        if (lookDirection != Vector3.zero) transform.rotation = Quaternion.LookRotation(lookDirection);
     }
 
-    // ... Rest des Skripts (UpdateInventoryDisplay, ShowTooltip, etc.) bleibt gleich ...
-    
     private void SetMenuState(bool state)
     {
         isMenuOpen = state;
@@ -152,10 +117,7 @@ public class InventoryManager : MonoBehaviour
         if(previewImage) previewImage.sprite = data.icon;
     }
 
-    public void HideTooltip()
-    {
-        if (tooltipPanel != null) tooltipPanel.SetActive(false);
-    }
+    public void HideTooltip() { if (tooltipPanel != null) tooltipPanel.SetActive(false); }
 
     public void SelectItem(InventoryItemData data)
     {
