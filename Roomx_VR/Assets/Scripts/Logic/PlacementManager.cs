@@ -32,7 +32,7 @@ public class PlacementManager : MonoBehaviour
     public void StartPlacement(GameObject prefab)
     {
         if (ghostObject != null) Destroy(ghostObject);
-        ghostObject = Instantiate(prefab);
+            ghostObject = Instantiate(prefab);
         PrepareGhost();
     }
 

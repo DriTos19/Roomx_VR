@@ -1,6 +1,9 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Collections.Generic;
+using UnityEngine.UI;
+using TMPro;
 
 public class InventoryManager : MonoBehaviour
 {
@@ -9,18 +12,34 @@ public class InventoryManager : MonoBehaviour
     [Header("VR Setup")]
     public Transform xrCamera;
     public CanvasGroup canvasGroup;
-    public InputActionProperty toggleButton; // XRI LeftHand Interaction/UI Press
+    public InputActionProperty toggleButton;
 
     [Header("Menu Settings")]
     public float distanceFromPlayer = 1.2f;
-    public float menuHeight = 0f; // height offset if needed
+    public float menuHeight = 0f;
 
     [Header("Slots")]
     public Transform slotParent;
     public GameObject slotPrefab;
+
+    [Header("Description")]
+    public CanvasGroup descriptionCanvasGroup;
+    public Image descriptionImage;
+    public TMP_Text descriptionText;
+
+    [Header("Items")]
     public List<InventoryItemData> items = new List<InventoryItemData>();
 
+    [Header("Budget UI")]
+    public TMP_Text balanceLabel;
+
+    [Header("Purchase UI")]
+    public Button purchaseButton;
+    public TMP_Text priceLabel;
+    public GameObject insufficientFundsNotice;
+
     private bool isOpen = false;
+    private Coroutine _noticeRoutine;
 
     void Awake()
     {
@@ -30,12 +49,34 @@ public class InventoryManager : MonoBehaviour
     void Start()
     {
         SetMenuState(false);
+
+        if (descriptionCanvasGroup != null)
+        {
+            descriptionCanvasGroup.alpha = 0;
+            descriptionCanvasGroup.blocksRaycasts = false;
+        }
+
         PopulateSlots();
+
+        BudgetManager.Instance.onBalanceChanged.AddListener(RefreshBalanceUI);
+        PurchaseManager.Instance.onItemSelected.AddListener(RefreshPurchaseUI);
+        PurchaseManager.Instance.onPurchaseFailed.AddListener(_ => ShowInsufficientFunds());
+        PurchaseManager.Instance.onPurchaseSuccess.AddListener(OnPurchaseSuccess);
+
+        if (purchaseButton != null)
+            purchaseButton.onClick.AddListener(() => PurchaseManager.Instance.PurchaseSelected());
+
+        RefreshBalanceUI(BudgetManager.Instance.Balance);
+        SetPurchaseButtonInteractable(false);
+
+        if (insufficientFundsNotice != null)
+            insufficientFundsNotice.SetActive(false);
     }
 
     void Update()
     {
-        if (toggleButton.action.WasPressedThisFrame())
+        // VR toggle
+        if (toggleButton.action != null && toggleButton.action.WasPressedThisFrame())
         {
             if (PlacementManager.Instance.IsCarryingObject) return;
 
@@ -43,10 +84,28 @@ public class InventoryManager : MonoBehaviour
             SetMenuState(isOpen);
         }
 
-        // Always snap in front of player while open, no lerp
+        // fallback keyboard (optional)
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            isOpen = !isOpen;
+            SetMenuState(isOpen);
+        }
+
         if (isOpen)
         {
             SnapToPlayer();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (BudgetManager.Instance != null)
+            BudgetManager.Instance.onBalanceChanged.RemoveListener(RefreshBalanceUI);
+
+        if (PurchaseManager.Instance != null)
+        {
+            PurchaseManager.Instance.onItemSelected.RemoveListener(RefreshPurchaseUI);
+            PurchaseManager.Instance.onPurchaseSuccess.RemoveListener(OnPurchaseSuccess);
         }
     }
 
@@ -58,13 +117,12 @@ public class InventoryManager : MonoBehaviour
         forward.y = 0;
         forward.Normalize();
 
-        // If looking straight up/down fallback to transform.forward
         if (forward.magnitude < 0.1f)
             forward = new Vector3(xrCamera.forward.x, 0, xrCamera.forward.z).normalized;
 
-        transform.position = xrCamera.position 
-                             + forward * distanceFromPlayer 
-                             + Vector3.up * menuHeight;
+        transform.position = xrCamera.position
+            + forward * distanceFromPlayer
+            + Vector3.up * menuHeight;
 
         transform.rotation = Quaternion.LookRotation(forward);
         transform.Rotate(0, 180, 0);
@@ -75,7 +133,19 @@ public class InventoryManager : MonoBehaviour
         return Instance != null && Instance.isOpen;
     }
 
-    public void PopulateSlots()
+    void SetMenuState(bool state)
+    {
+        isOpen = state;
+
+        canvasGroup.alpha = state ? 1 : 0;
+        canvasGroup.interactable = state;
+        canvasGroup.blocksRaycasts = state;
+
+        if (!state)
+            HideDescription();
+    }
+
+    void PopulateSlots()
     {
         foreach (Transform child in slotParent)
             Destroy(child.gameObject);
@@ -87,65 +157,76 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    public void SelectItem(InventoryItemData data)
+    // ---------- ITEM UI ----------
+
+    public void ShowItemDetails(InventoryItemData item)
     {
-        isOpen = false;
+        descriptionImage.sprite = item.icon;
+        descriptionText.text = $"<b>{item.itemName}</b>\n\n{item.description}";
+
+        descriptionCanvasGroup.alpha = 1;
+        descriptionCanvasGroup.blocksRaycasts = true;
+
+        PurchaseManager.Instance.SelectItem(item);
+    }
+
+    public void HideDescription()
+    {
+        descriptionCanvasGroup.alpha = 0;
+        descriptionCanvasGroup.blocksRaycasts = false;
+    }
+
+    // ---------- PURCHASE ----------
+
+    private void RefreshBalanceUI(float balance)
+    {
+        if (balanceLabel != null)
+            balanceLabel.text = $"Balance: ${balance:F0}";
+
+        if (PurchaseManager.Instance.SelectedItem != null)
+            RefreshPurchaseUI(PurchaseManager.Instance.SelectedItem);
+    }
+
+    private void RefreshPurchaseUI(InventoryItemData item)
+    {
+        if (item == null)
+        {
+            SetPurchaseButtonInteractable(false);
+            return;
+        }
+
+        if (priceLabel != null)
+            priceLabel.text = item.price > 0 ? $"${item.price:F0}" : "Free";
+
+        SetPurchaseButtonInteractable(BudgetManager.Instance.CanAfford(item.price));
+    }
+
+    private void SetPurchaseButtonInteractable(bool state)
+    {
+        if (purchaseButton != null)
+            purchaseButton.interactable = state;
+    }
+
+    private void ShowInsufficientFunds()
+    {
+        if (insufficientFundsNotice == null) return;
+
+        if (_noticeRoutine != null)
+            StopCoroutine(_noticeRoutine);
+
+        _noticeRoutine = StartCoroutine(FlashNotice());
+    }
+
+    private IEnumerator FlashNotice()
+    {
+        insufficientFundsNotice.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        insufficientFundsNotice.SetActive(false);
+    }
+
+    private void OnPurchaseSuccess(InventoryItemData item)
+    {
         SetMenuState(false);
-        PlacementManager.Instance.StartPlacement(data.prefab3D);
-    }
-
-    private void SetMenuState(bool state)
-    {
-        canvasGroup.alpha = state ? 1 : 0;
-        canvasGroup.interactable = state;
-        canvasGroup.blocksRaycasts = state;
-    }
-
-    // Snaps menu in front of player when first opened
-    void PositionMenu()
-    {
-        if (xrCamera == null) return;
-
-        Vector3 forward = xrCamera.forward;
-        forward.y = 0;
-        forward.Normalize();
-
-        Vector3 targetPos = xrCamera.position
-            + forward * distanceFromPlayer
-            + Vector3.up * menuHeight;
-
-        transform.position = targetPos;
-        transform.LookAt(new Vector3(
-            xrCamera.position.x,
-            transform.position.y,
-            xrCamera.position.z));
-        transform.Rotate(0, 180, 0);
-    }
-
-    // Smoothly follows player while open
-    void FollowPlayer()
-    {
-        if (xrCamera == null) return;
-
-        Vector3 forward = xrCamera.forward;
-        forward.y = 0;
-        forward.Normalize();
-
-        Vector3 targetPos = xrCamera.position
-            + forward * distanceFromPlayer
-            + Vector3.up * menuHeight;
-
-        // Smooth follow
-        transform.position = Vector3.Lerp(
-            transform.position,
-            targetPos,
-            Time.deltaTime * 5f);
-
-        // Always face player
-        transform.LookAt(new Vector3(
-            xrCamera.position.x,
-            transform.position.y,
-            xrCamera.position.z));
-        transform.Rotate(0, 180, 0);
+        PlacementManager.Instance.StartPlacement(item.prefab3D);
     }
 }
