@@ -10,14 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 50b67e15aeec206458735abb17af76e6, type: 3}
-  m_Name: Item
+  m_Name: Item 3
   m_EditorClassIdentifier: 
   itemName: ItemName
-  description: "\rDieses luxuri\xF6se Bett vereint zeitlose Eleganz mit h\xF6chstem
-    Komfort. Hochwertige, atmungsaktive Textilien und eine ergonomische Polsterung
-    schaffen eine Oase der Ruhe, die durch exzellente Verarbeitung und ein einladendes,
-    harmonisches Design besticht."
-  icon: {fileID: 21300000, guid: d5329a31f241620488b1f8c220a444a8, type: 3}
+  description: 'vNAme NAme NAme NAme NAme NAme NAme NAme NAme '
+  icon: {fileID: 21300000, guid: 923e3f912302a9f4e84db4327770f3d7, type: 3}
   prefab3D: {fileID: 1333106423820836591, guid: 5be38ab9511ca344f8598a92ebcd3d47, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 0
