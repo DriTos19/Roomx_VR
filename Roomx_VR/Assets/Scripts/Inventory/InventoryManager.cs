@@ -55,6 +55,8 @@ public class InventoryManager : MonoBehaviour
         UpdateInventoryDisplay();
         if (nextButton) nextButton.onClick.AddListener(NextPage);
         if (prevButton) prevButton.onClick.AddListener(PreviousPage);
+
+        // tooltip starts hidden
         HideTooltip();
         SetMenuState(false);
 
@@ -141,6 +143,7 @@ public class InventoryManager : MonoBehaviour
         if (nextButton) nextButton.interactable = (currentPage + 1) * itemsPerPage < allItems.Count;
     }
 
+    // called on click from ItemSlotUI — stays open until buy
     public void ShowTooltip(InventoryItemData data)
     {
         if (tooltipPanel == null) return;
@@ -151,6 +154,7 @@ public class InventoryManager : MonoBehaviour
         PurchaseManager.Instance.SelectItem(data);
     }
 
+    // only called when menu closes or page changes
     public void HideTooltip()
     {
         if (tooltipPanel != null) tooltipPanel.SetActive(false);

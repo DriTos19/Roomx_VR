@@ -27,14 +27,12 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (manager != null && itemData != null)
-            manager.ShowTooltip(itemData);
+        // intentionally empty - tooltip only shows on click now
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (manager != null)
-            manager.HideTooltip();
+        // intentionally empty - tooltip stays visible until buy or close
     }
 
     private void OnDisable()
