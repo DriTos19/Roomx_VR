@@ -5,12 +5,10 @@ public class BudgetManager : MonoBehaviour
 {
     public static BudgetManager Instance { get; private set; }
 
-    [Header("Starting Balance")]
-    [Min(0)] public float startingBalance = 1000f;
-
     public UnityEvent<float> onBalanceChanged = new UnityEvent<float>();
 
     private const string SAVE_KEY = "PlayerBudget";
+    private const string BUDGET_SET_KEY = "BudgetHasBeenSet";
     private float _balance;
 
     public float Balance => _balance;
@@ -37,10 +35,19 @@ public class BudgetManager : MonoBehaviour
         onBalanceChanged.Invoke(_balance);
     }
 
+    public void InitialiseWithAmount(float amount)
+    {
+        if (PlayerPrefs.HasKey(BUDGET_SET_KEY)) return;
+        SetBalance(amount);
+        PlayerPrefs.SetInt(BUDGET_SET_KEY, 1);
+        PlayerPrefs.Save();
+    }
+
     public void ResetBudget()
     {
         PlayerPrefs.DeleteKey(SAVE_KEY);
-        SetBalance(startingBalance);
+        PlayerPrefs.DeleteKey(BUDGET_SET_KEY);
+        Load();
     }
 
     private void Awake()
@@ -59,9 +66,10 @@ public class BudgetManager : MonoBehaviour
 
     private void Load()
     {
-        _balance = PlayerPrefs.HasKey(SAVE_KEY)
-            ? PlayerPrefs.GetFloat(SAVE_KEY)
-            : startingBalance;
+        if (PlayerPrefs.HasKey(SAVE_KEY))
+            _balance = PlayerPrefs.GetFloat(SAVE_KEY);
+        else
+            _balance = 1000f;
         onBalanceChanged.Invoke(_balance);
     }
 }
