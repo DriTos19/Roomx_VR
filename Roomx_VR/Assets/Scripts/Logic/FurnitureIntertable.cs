@@ -3,21 +3,22 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 public class FurnitureInteractable : MonoBehaviour
 {
-    private float lastClickTime;
-    private const float DOUBLE_CLICK_TIME = 0.3f;
+    private float lastClickTime = -999f;
+    private const float DOUBLE_CLICK_TIME = 0.35f;
 
     void Update()
     {
-        // Prüfen, ob der Manager und die benötigten Referenzen existieren
         if (PlacementManager.Instance == null) return;
         if (PlacementManager.Instance.IsCarryingObject) return;
-        
+        if (InventoryManager.IsMenuOpen()) return;
+
         XRRayInteractor rayInteractor = PlacementManager.Instance.rayInteractor;
         if (rayInteractor == null) return;
 
-        // Input-Abfrage über die Action aus dem PlacementManager
-        if (PlacementManager.Instance.triggerPress.action != null && 
-            PlacementManager.Instance.triggerPress.action.WasPressedThisFrame())
+        var triggerAction = PlacementManager.Instance.triggerPress.action;
+        if (triggerAction == null) return;
+
+        if (triggerAction.WasPressedThisFrame())
         {
             CheckForPickup(rayInteractor);
         }
@@ -25,21 +26,24 @@ public class FurnitureInteractable : MonoBehaviour
 
     private void CheckForPickup(XRRayInteractor interactor)
     {
-        if (interactor.TryGetCurrent3DRaycastHit(out RaycastHit hit))
-        {
-            // Prüfen, ob genau dieses Objekt oder ein Kind davon getroffen wurde
-            if (hit.collider.gameObject == gameObject || hit.collider.transform.IsChildOf(transform))
-            {
-                float timeSinceLastClick = Time.time - lastClickTime;
+        if (!interactor.TryGetCurrent3DRaycastHit(out RaycastHit hit)) return;
 
-                if (timeSinceLastClick <= DOUBLE_CLICK_TIME)
-                {
-                    // Dieser Aufruf funktioniert nur, wenn die Methode in PlacementManager existiert!
-                    PlacementManager.Instance.PickUpFurniture(gameObject);
-                }
-                
-                lastClickTime = Time.time;
-            }
+        bool hitThis = hit.collider.gameObject == gameObject ||
+                       hit.collider.transform.IsChildOf(transform);
+
+        if (!hitThis) return;
+
+        float timeSinceLastClick = Time.time - lastClickTime;
+
+        if (timeSinceLastClick <= DOUBLE_CLICK_TIME)
+        {
+            // Double click confirmed — pick up
+            PlacementManager.Instance.PickUpFurniture(gameObject);
+            lastClickTime = -999f; // reset
+        }
+        else
+        {
+            lastClickTime = Time.time;
         }
     }
 }

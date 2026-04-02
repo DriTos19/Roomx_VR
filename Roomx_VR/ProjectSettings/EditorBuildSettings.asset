@@ -8,15 +8,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Menu.unity
     guid: 3345293ad1a2e4245a85d15f9f45c390
-  - enabled: 0
-    path: Assets/Scenes/House3.unity
-    guid: 3d7b01059ea20eb4d922b8c6344f66f9
-  - enabled: 0
-    path: Assets/Scenes/HouseEnton.unity
-    guid: 99f12ca7fdbf4c14097e0bd98aa74e4e
   - enabled: 1
-    path: Assets/Scenes/HouseEnton1.unity
+    path: Assets/Scenes/HouseEnton.unity
     guid: 9a96a9546e3ecff44a39c36523cfdde4
+  - enabled: 1
+    path: Assets/Scenes/HouseSidrit.unity
+    guid: 94687e90cf0bc71498614b3f51cc8117
+  - enabled: 1
+    path: Assets/Scenes/HouseKlea1.unity
+    guid: be68bd86d73d19045ac07ab3107fa51f
+  - enabled: 1
+    path: Assets/Scenes/HouseKlea.unity
+    guid: 23289dc44e19d784ca9b11de63ce1b9f
   m_configObjects:
     Unity.XR.PXR.Settings: {fileID: 11400000, guid: 5882f851d230a6944907f5a215dda57c, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: eff21b1d49ce5344f8c693314635d57c, type: 2}

@@ -21,6 +21,6 @@ public class BudgetUI : MonoBehaviour
     private void UpdateDisplay(float balance)
     {
         if (balanceText != null)
-            balanceText.text = $"{prefix}{balance:F2}";
+            balanceText.text = $"{balance:F0}{prefix}";
     }
 }
