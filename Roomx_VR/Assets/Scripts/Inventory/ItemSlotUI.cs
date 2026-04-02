@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems; // Notwendig für Hover-Events
+using UnityEngine.EventSystems;
 
 public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
@@ -12,39 +12,29 @@ public class ItemSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     {
         itemData = data;
         manager = invManager;
-        if(iconImage != null && data.icon != null) iconImage.sprite = data.icon;
+        if (iconImage != null && data.icon != null) iconImage.sprite = data.icon;
 
         Button btn = GetComponent<Button>();
-        if(btn != null) 
+        if (btn != null)
         {
             btn.onClick.RemoveAllListeners();
             btn.onClick.AddListener(() => {
-                manager.SelectItem(itemData);
-                // Tooltip schließen, wenn das Item ausgewählt wurde
-                manager.HideTooltip();
+                PurchaseManager.Instance.SelectItem(itemData);
+                manager.ShowTooltip(itemData);
             });
         }
     }
 
-    // Wird aufgerufen, wenn der VR-Strahl auf den Button zeigt
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (manager != null && itemData != null)
-        {
-            manager.ShowTooltip(itemData);
-        }
+        // intentionally empty - tooltip only shows on click now
     }
 
-    // Wird aufgerufen, wenn der VR-Strahl den Button verlässt
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (manager != null)
-        {
-            manager.HideTooltip();
-        }
+        // intentionally empty - tooltip stays visible until buy or close
     }
 
-    // Falls das Objekt zerstört wird (z.B. beim Seitenwechsel), Tooltip sicherheitshalber schließen
     private void OnDisable()
     {
         if (manager != null) manager.HideTooltip();

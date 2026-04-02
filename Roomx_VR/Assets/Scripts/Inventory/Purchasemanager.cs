@@ -26,15 +26,10 @@ public class PurchaseManager : MonoBehaviour
     public void Purchase(InventoryItemData item)
     {
         if (item == null) return;
-
         if (BudgetManager.Instance.TrySpend(item.price))
-        {
             onPurchaseSuccess.Invoke(item);
-        }
         else
-        {
             onPurchaseFailed.Invoke(item);
-        }
     }
 
     private void Awake()
