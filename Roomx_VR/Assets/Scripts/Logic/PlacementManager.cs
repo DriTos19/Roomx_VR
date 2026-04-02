@@ -29,14 +29,18 @@ public class PlacementManager : MonoBehaviour
     private bool isValid = false;
     private bool canPlaceThisFrame = false;
 
+    // Cooldown after placement so double-click pickup doesn't fire instantly
+    private float placementCooldown = 0f;
+    private const float PLACEMENT_COOLDOWN_TIME = 0.5f;
+
     private InventoryItemData _currentItemData;
     private Dictionary<Renderer, Material[]> _originalMaterials = new Dictionary<Renderer, Material[]>();
 
     public bool IsCarryingObject => isPlacing;
 
-    void Awake() 
-    { 
-        if (Instance == null) Instance = this; 
+    void Awake()
+    {
+        if (Instance == null) Instance = this;
     }
 
     public void StartPlacement(InventoryItemData item)
@@ -47,18 +51,19 @@ public class PlacementManager : MonoBehaviour
         _currentItemData = item;
         ghostObject = Instantiate(item.prefab3D);
         PrepareGhost();
-        canPlaceThisFrame = false; // Verhindert Sofort-Platzierung beim Menüklick
+        canPlaceThisFrame = false;
     }
 
     public void PickUpFurniture(GameObject furniture)
     {
         if (isPlacing || furniture == null) return;
 
-        // Read back the item data so FinalizePlacement can re-stamp it
+        // Check cooldown so we don't immediately re-pickup after placing
+        if (Time.time < placementCooldown) return;
+
         FurniturePrefabReference existingRef = furniture.GetComponent<FurniturePrefabReference>();
         _currentItemData = existingRef != null ? existingRef.itemData : null;
 
-        // Save renderer materials before PrepareGhost overwrites them
         foreach (Renderer rend in furniture.GetComponentsInChildren<Renderer>())
             _originalMaterials[rend] = rend.materials;
 
@@ -66,14 +71,13 @@ public class PlacementManager : MonoBehaviour
 
         ghostObject = furniture;
         PrepareGhost();
-        canPlaceThisFrame = true; 
+        canPlaceThisFrame = false; // prevent instant re-place
     }
 
     private void PrepareGhost()
     {
         if (ghostObject == null) return;
-        
-        // Collider aus, damit der Raycast nicht am Möbelstück hängen bleibt
+
         foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
             col.enabled = false;
 
@@ -87,9 +91,8 @@ public class PlacementManager : MonoBehaviour
         if (InventoryManager.IsMenuOpen()) return;
 
         HandleRotation();
-        
-        // WICHTIG: Nur abbrechen, wenn NICHT gleichzeitig platziert wird
-        if (cancelAction.action.WasPressedThisFrame() && !triggerPress.action.WasPressedThisFrame()) 
+
+        if (cancelAction.action.WasPressedThisFrame() && !triggerPress.action.WasPressedThisFrame())
         {
             CancelPlacement();
             return;
@@ -124,14 +127,12 @@ public class PlacementManager : MonoBehaviour
             ghostObject.transform.position = targetPos;
             ghostObject.transform.rotation = Quaternion.Euler(0, currentRotation, 0);
 
-            // Check ob der Boden getroffen wurde
             isValid = ((1 << hit.collider.gameObject.layer) & groundLayer) != 0;
             ApplyMaterial(isValid ? validMaterial : invalidMaterial);
 
             if (triggerPress.action.WasPressedThisFrame() && canPlaceThisFrame)
             {
                 if (isValid) FinalizePlacement();
-                else Debug.Log("Ungültige Position - Kein Platzieren möglich.");
             }
         }
         else
@@ -149,35 +150,37 @@ public class PlacementManager : MonoBehaviour
         foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
             col.enabled = true;
 
-        // Objekt auf den Furniture-Layer setzen
         int furnLayer = LayerMask.NameToLayer("Furniture");
         if (furnLayer != -1) SetLayerRecursively(ghostObject, furnLayer);
 
-        // Stamp the asset reference so the save manager can serialize it
         FurniturePrefabReference prefabRef = ghostObject.GetComponent<FurniturePrefabReference>();
         if (prefabRef == null) prefabRef = ghostObject.AddComponent<FurniturePrefabReference>();
         if (_currentItemData != null)
         {
             prefabRef.prefabPath = _currentItemData.name;
-            prefabRef.itemData   = _currentItemData;
+            prefabRef.itemData = _currentItemData;
         }
 
+        // Add interactable so it can be picked up again
+        if (ghostObject.GetComponent<FurnitureInteractable>() == null)
+            ghostObject.AddComponent<FurnitureInteractable>();
+
         FurnitureSaveManager.Instance?.RegisterFurniture(ghostObject);
+
+        // Set cooldown so double-click pickup doesn't fire immediately
+        placementCooldown = Time.time + PLACEMENT_COOLDOWN_TIME;
 
         _currentItemData = null;
         ghostObject = null;
         isPlacing = false;
-        Debug.Log("Objekt erfolgreich platziert!");
     }
 
     public void CancelPlacement()
     {
         RestoreOriginalMaterials();
-        if (ghostObject != null) 
-        {
+        if (ghostObject != null)
             Destroy(ghostObject);
-            Debug.Log("Platzierung abgebrochen, Objekt gelöscht.");
-        }
+
         ghostObject = null;
         isPlacing = false;
         _currentItemData = null;
@@ -186,11 +189,9 @@ public class PlacementManager : MonoBehaviour
     void ApplyMaterial(Material mat)
     {
         if (mat == null || ghostObject == null) return;
-        MeshRenderer[] renderers = ghostObject.GetComponentsInChildren<MeshRenderer>();
-        foreach (var rend in renderers)
+        foreach (var rend in ghostObject.GetComponentsInChildren<MeshRenderer>())
         {
             if (rend == null) continue;
-            // Save originals before overwriting for the first time
             if (!_originalMaterials.ContainsKey(rend))
                 _originalMaterials[rend] = rend.materials;
             rend.material = mat;
