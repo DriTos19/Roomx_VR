@@ -24,12 +24,12 @@ public class FurnitureSaveManager : MonoBehaviour
     public string itemsResourcesPath = "Items";
 
     public List<GameObject> activeFurniture = new List<GameObject>();
-    private string savePath;
+
+    private string SavePath => Application.persistentDataPath + "/" + SceneManager.GetActiveScene().name + "_furniture.json";
 
     void Awake()
     {
         Instance = this;
-        savePath = Application.persistentDataPath + "/" + SceneManager.GetActiveScene().name + "_furniture.json";
     }
 
     void Start()
@@ -71,8 +71,8 @@ public class FurnitureSaveManager : MonoBehaviour
         Debug.Log("JSON to save: " + json);
         
         try {
-            File.WriteAllText(savePath, json);
-            Debug.Log("FILE SAVED! Look here: " + savePath);
+            File.WriteAllText(SavePath, json);
+            Debug.Log("FILE SAVED! Look here: " + SavePath);
             ShowStatus($"Saved {data.allItems.Count} item{(data.allItems.Count == 1 ? "" : "s")}!");
         } catch (System.Exception e) {
             Debug.LogError("Failed to save file: " + e.Message);
@@ -81,15 +81,15 @@ public class FurnitureSaveManager : MonoBehaviour
     }
 
     public void LoadGame() {
-        Debug.Log("Save file path: " + savePath);
+        Debug.Log("Save file path: " + SavePath);
         
-        if (!File.Exists(savePath)) {
-            Debug.LogWarning("No save file found at: " + savePath);
+        if (!File.Exists(SavePath)) {
+            Debug.LogWarning("No save file found at: " + SavePath);
             ShowStatus("No save file found.");
             return;
         }
 
-        string json = File.ReadAllText(savePath);
+        string json = File.ReadAllText(SavePath);
         Debug.Log("Raw JSON content: " + json);
         Debug.Log("JSON length: " + json.Length);
         

@@ -111,7 +111,21 @@ public class PlacementManager : MonoBehaviour
 
     void HandlePositioning()
     {
-        if (rayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit hit))
+        bool gotHit = rayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit hit);
+
+        if (!gotHit)
+        {
+            Physics.Raycast(
+                rayInteractor.transform.position,
+                rayInteractor.transform.forward,
+                out hit,
+                100f,
+                groundLayer
+            );
+            gotHit = hit.collider != null;
+        }
+
+        if (gotHit)
         {
             if (ghostObject == null) return;
 
@@ -145,6 +159,7 @@ public class PlacementManager : MonoBehaviour
     {
         if (ghostObject == null) return;
 
+        ghostObject.SetActive(true);
         RestoreOriginalMaterials();
 
         foreach (var col in ghostObject.GetComponentsInChildren<Collider>())
