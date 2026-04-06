@@ -26,8 +26,8 @@ public class InventoryManager : MonoBehaviour
 
     [Header("Data & Pagination")]
     public List<InventoryItemData> allItems;
-    private int itemsPerPage = 6;
-    private int currentPage = 0;
+    protected int itemsPerPage = 6;
+    protected int currentPage = 0;
 
     [Header("UI Navigation")]
     public Button nextButton;
@@ -45,50 +45,52 @@ public class InventoryManager : MonoBehaviour
     public Button purchaseButton;
     public GameObject insufficientFundsNotice;
 
-    private bool isMenuOpen = false;
+    protected bool isMenuOpen = false;
     private Coroutine _noticeRoutine;
 
-    void Awake() { Instance = this; }
+    protected virtual void Awake() 
+    { 
+        if (Instance == null) Instance = this; 
+    }
 
-    void Start()
+    // FIX for Error CS0117: IsMenuOpen
+    public static bool IsMenuOpen()
+    {
+        return Instance != null && Instance.isMenuOpen;
+    }
+
+    protected virtual void Start()
     {
         UpdateInventoryDisplay();
         if (nextButton) nextButton.onClick.AddListener(NextPage);
         if (prevButton) prevButton.onClick.AddListener(PreviousPage);
 
-        // tooltip starts hidden
         HideTooltip();
         SetMenuState(false);
 
-        BudgetManager.Instance.onBalanceChanged.AddListener(RefreshBalanceUI);
-        PurchaseManager.Instance.onItemSelected.AddListener(RefreshPurchaseUI);
-        PurchaseManager.Instance.onPurchaseFailed.AddListener(_ => ShowInsufficientFunds());
-        PurchaseManager.Instance.onPurchaseSuccess.AddListener(OnPurchaseSuccess);
+        if (BudgetManager.Instance != null)
+            BudgetManager.Instance.onBalanceChanged.AddListener(RefreshBalanceUI);
+        
+        if (PurchaseManager.Instance != null)
+        {
+            PurchaseManager.Instance.onItemSelected.AddListener(RefreshPurchaseUI);
+            PurchaseManager.Instance.onPurchaseFailed.AddListener(_ => ShowInsufficientFunds());
+            PurchaseManager.Instance.onPurchaseSuccess.AddListener(OnPurchaseSuccess);
+        }
 
         if (purchaseButton != null)
             purchaseButton.onClick.AddListener(() => PurchaseManager.Instance.PurchaseSelected());
 
-        RefreshBalanceUI(BudgetManager.Instance.Balance);
+        if (BudgetManager.Instance != null) RefreshBalanceUI(BudgetManager.Instance.Balance);
         SetPurchaseButtonInteractable(false);
 
         if (insufficientFundsNotice != null)
             insufficientFundsNotice.SetActive(false);
     }
 
-    void OnDestroy()
+    protected virtual void Update()
     {
-        if (BudgetManager.Instance != null)
-            BudgetManager.Instance.onBalanceChanged.RemoveListener(RefreshBalanceUI);
-        if (PurchaseManager.Instance != null)
-        {
-            PurchaseManager.Instance.onItemSelected.RemoveListener(RefreshPurchaseUI);
-            PurchaseManager.Instance.onPurchaseSuccess.RemoveListener(OnPurchaseSuccess);
-        }
-    }
-
-    void Update()
-    {
-        if (menuToggleButton.action.WasPressedThisFrame())
+        if (menuToggleButton.action != null && menuToggleButton.action.WasPressedThisFrame())
         {
             isMenuOpen = !isMenuOpen;
             SetMenuState(isMenuOpen);
@@ -97,38 +99,45 @@ public class InventoryManager : MonoBehaviour
         if (isMenuOpen && xrCamera != null) FollowCamera();
     }
 
-    private void FollowCamera()
+    protected virtual void FollowCamera()
     {
         Vector3 cameraPos = xrCamera.position;
         Vector3 cameraForward = xrCamera.forward;
-        Vector3 cameraRight = xrCamera.right;
-
         cameraForward.y = 0;
-        cameraRight.y = 0;
         cameraForward.Normalize();
-        cameraRight.Normalize();
 
-        Vector3 targetPosition = cameraPos + (cameraForward * distanceFromPlayer) + (cameraRight * menuWidthOffset);
+        Vector3 targetPosition = cameraPos + (cameraForward * distanceFromPlayer);
         targetPosition.y = cameraPos.y + menuHeightOffset;
 
         transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * 10f);
-
         Vector3 lookDirection = transform.position - cameraPos;
         lookDirection.y = 0;
         if (lookDirection != Vector3.zero) transform.rotation = Quaternion.LookRotation(lookDirection);
     }
 
-    private void SetMenuState(bool state)
+    public virtual void SetMenuState(bool state)
     {
         isMenuOpen = state;
-        mainCanvasGroup.alpha = state ? 1 : 0;
-        mainCanvasGroup.blocksRaycasts = state;
-        mainCanvasGroup.interactable = state;
+        if (mainCanvasGroup != null)
+        {
+            mainCanvasGroup.alpha = state ? 1 : 0;
+            mainCanvasGroup.blocksRaycasts = state;
+            mainCanvasGroup.interactable = state;
+        }
     }
 
-    public void UpdateInventoryDisplay()
+    // FIX for Error CS1061: CloseInventory
+    public virtual void CloseInventory()
     {
+        SetMenuState(false);
+        HideTooltip();
+    }
+
+    public virtual void UpdateInventoryDisplay()
+    {
+        if (slotParent == null) return;
         foreach (Transform child in slotParent) Destroy(child.gameObject);
+        
         int startIndex = currentPage * itemsPerPage;
         int endIndex = Mathf.Min(startIndex + itemsPerPage, allItems.Count);
 
@@ -143,7 +152,13 @@ public class InventoryManager : MonoBehaviour
         if (nextButton) nextButton.interactable = (currentPage + 1) * itemsPerPage < allItems.Count;
     }
 
-    // called on click from ItemSlotUI — stays open until buy
+    // FIX for Error CS1061: SelectItem
+    public virtual void SelectItem(InventoryItemData data)
+    {
+        if (data != null && PurchaseManager.Instance != null)
+            PurchaseManager.Instance.SelectItem(data);
+    }
+
     public void ShowTooltip(InventoryItemData data)
     {
         if (tooltipPanel == null) return;
@@ -151,75 +166,18 @@ public class InventoryManager : MonoBehaviour
         if (nameText) nameText.text = data.itemName;
         if (descriptionText) descriptionText.text = data.GetLocalizedDescription();
         if (previewImage) previewImage.sprite = data.icon;
-        PurchaseManager.Instance.SelectItem(data);
+        SelectItem(data);
     }
 
-    // only called when menu closes or page changes
-    public void HideTooltip()
-    {
-        if (tooltipPanel != null) tooltipPanel.SetActive(false);
-    }
+    public void HideTooltip() { if (tooltipPanel != null) tooltipPanel.SetActive(false); }
 
-    public void SelectItem(InventoryItemData data)
-    {
-        if (data != null && data.prefab3D != null)
-            PurchaseManager.Instance.SelectItem(data);
-    }
+    public virtual void NextPage() { currentPage++; UpdateInventoryDisplay(); HideTooltip(); }
+    public virtual void PreviousPage() { currentPage--; UpdateInventoryDisplay(); HideTooltip(); }
 
-    public void HideMenu()
-    {
-        SetMenuState(false);
-        HideTooltip();
-    }
-
-    public void NextPage() { currentPage++; UpdateInventoryDisplay(); HideTooltip(); }
-    public void PreviousPage() { currentPage--; UpdateInventoryDisplay(); HideTooltip(); }
-
-    public static bool IsMenuOpen()
-    {
-        if (Instance == null) return false;
-        return Instance.isMenuOpen;
-    }
-
-    private void RefreshBalanceUI(float balance)
-    {
-        if (balanceLabel != null)
-            balanceLabel.text = $"{balance:F0}$";
-        if (PurchaseManager.Instance.SelectedItem != null)
-            RefreshPurchaseUI(PurchaseManager.Instance.SelectedItem);
-    }
-
-    private void RefreshPurchaseUI(InventoryItemData item)
-    {
-        if (item == null) { SetPurchaseButtonInteractable(false); return; }
-        if (priceLabel != null)
-            priceLabel.text = item.price > 0 ? $"{item.price:F0}$" : "Free";
-        SetPurchaseButtonInteractable(BudgetManager.Instance.CanAfford(item.price));
-    }
-
-    private void SetPurchaseButtonInteractable(bool state)
-    {
-        if (purchaseButton != null)
-            purchaseButton.interactable = state;
-    }
-
-    private void ShowInsufficientFunds()
-    {
-        if (insufficientFundsNotice == null) return;
-        if (_noticeRoutine != null) StopCoroutine(_noticeRoutine);
-        _noticeRoutine = StartCoroutine(FlashNotice());
-    }
-
-    private IEnumerator FlashNotice()
-    {
-        insufficientFundsNotice.SetActive(true);
-        yield return new WaitForSeconds(2f);
-        insufficientFundsNotice.SetActive(false);
-    }
-
-    private void OnPurchaseSuccess(InventoryItemData item)
-    {
-        HideMenu();
-        PlacementManager.Instance.StartPlacement(item);
-    }
+    private void RefreshBalanceUI(float balance) { if (balanceLabel) balanceLabel.text = $"{balance:F0}$"; }
+    private void RefreshPurchaseUI(InventoryItemData item) { if (priceLabel && item != null) priceLabel.text = $"{item.price:F0}$"; }
+    private void SetPurchaseButtonInteractable(bool state) { if (purchaseButton) purchaseButton.interactable = state; }
+    private void ShowInsufficientFunds() { if (insufficientFundsNotice) StartCoroutine(FlashNotice()); }
+    private IEnumerator FlashNotice() { insufficientFundsNotice.SetActive(true); yield return new WaitForSeconds(2f); insufficientFundsNotice.SetActive(false); }
+    private void OnPurchaseSuccess(InventoryItemData item) { CloseInventory(); PlacementManager.Instance.StartPlacement(item); }
 }

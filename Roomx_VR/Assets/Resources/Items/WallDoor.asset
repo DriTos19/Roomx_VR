@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50b67e15aeec206458735abb17af76e6, type: 3}
+  m_Name: WallDoor
+  m_EditorClassIdentifier: 
+  itemName: Wall
+  description: A wall segment that includes a built-in door, allowing passage between
+    spaces while still functioning as part of the wall structure.
+  icon: {fileID: 21300000, guid: 8f00f532836e75b47bf8ab19d1bd1ede, type: 3}
+  prefab3D: {fileID: 919132149155446097, guid: db9da69a4fd3ecd408c1c9de76d86850, type: 3}
+  placementRotationOffset: {x: 0, y: 0, z: 0}
+  category: 2
+  price: 0
+  useManualPlacementHeight: 0
+  manualPlacementHeight: 2.5
+  manualHeightAdjustSpeed: 2
+  minManualPlacementHeight: 1
+  maxManualPlacementHeight: 10

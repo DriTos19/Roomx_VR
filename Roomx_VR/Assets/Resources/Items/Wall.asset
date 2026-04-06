@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50b67e15aeec206458735abb17af76e6, type: 3}
+  m_Name: Wall
+  m_EditorClassIdentifier: 
+  itemName: Wall
+  description: A structural element that defines room boundaries and helps shape
+    the layout of a space.
+  icon: {fileID: 21300000, guid: 9acd7f97d8b1f9049817d1a60c7e73e2, type: 3}
+  prefab3D: {fileID: 919132149155446097, guid: 4090c2f2cc6082342bd79663f888fdcf, type: 3}
+  placementRotationOffset: {x: 0, y: 0, z: 0}
+  category: 2
+  price: 0
+  useManualPlacementHeight: 0
+  manualPlacementHeight: 2.5
+  manualHeightAdjustSpeed: 2
+  minManualPlacementHeight: 1
+  maxManualPlacementHeight: 10
