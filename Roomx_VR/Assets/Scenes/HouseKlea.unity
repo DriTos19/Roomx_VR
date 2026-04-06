@@ -5746,7 +5746,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
-  key: save
+  key: load
 --- !u!114 &1573341870
 MonoBehaviour:
   m_ObjectHideFlags: 0

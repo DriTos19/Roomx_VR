@@ -124,24 +124,39 @@ public class FurnitureSaveManager : MonoBehaviour
 
             foreach (FurnitureData item in data.allItems) {
                 Debug.Log("Attempting to load InventoryItemData: " + item.prefabName);
-                
-                // Load the InventoryItemData ScriptableObject from the correct path
-                InventoryItemData itemData = Resources.Load<InventoryItemData>(itemsResourcesPath + "/" + item.prefabName);
+
+                // Look up the InventoryItemData by name from the inventory instead of Resources.Load
+                InventoryItemData itemData = null;
+                if (InventoryManager.Instance != null)
+                {
+                    foreach (InventoryItemData candidate in InventoryManager.Instance.allItems)
+                    {
+                        if (candidate != null && candidate.name == item.prefabName)
+                        {
+                            itemData = candidate;
+                            break;
+                        }
+                    }
+                }
 
                 if (itemData != null && itemData.prefab3D != null) {
                     GameObject newObj = Instantiate(itemData.prefab3D, item.position, item.rotation);
-                    
-                    // Add the prefab reference component
+
                     FurniturePrefabReference prefabRef = newObj.AddComponent<FurniturePrefabReference>();
                     prefabRef.prefabPath = item.prefabName;
-                    
+                    prefabRef.itemData = itemData;
+
+                    newObj.AddComponent<FurnitureInteractable>();
+
+                    int furnLayer = LayerMask.NameToLayer("Furniture");
+                    if (furnLayer != -1) SetLayerRecursively(newObj, furnLayer);
+
                     activeFurniture.Add(newObj);
                     Debug.Log("Loaded: " + item.prefabName);
                 } else {
-                    Debug.LogError("FAILED: Cannot find InventoryItemData at Resources/" + itemsResourcesPath + "/" + item.prefabName);
-                    if (itemData != null && itemData.prefab3D == null) {
+                    Debug.LogError("FAILED: Cannot find InventoryItemData named '" + item.prefabName + "' in InventoryManager.allItems");
+                    if (itemData != null && itemData.prefab3D == null)
                         Debug.LogError("InventoryItemData found but prefab3D is null!");
-                    }
                 }
             }
             
@@ -151,6 +166,13 @@ public class FurnitureSaveManager : MonoBehaviour
             Debug.LogError("Error during load: " + e.Message + "\n" + e.StackTrace);
             ShowStatus("Load failed!");
         }
+    }
+
+    private void SetLayerRecursively(GameObject obj, int newLayer)
+    {
+        obj.layer = newLayer;
+        foreach (Transform child in obj.transform)
+            SetLayerRecursively(child.gameObject, newLayer);
     }
 
     private void ShowStatus(string message)
