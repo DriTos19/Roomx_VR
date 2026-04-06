@@ -1481,7 +1481,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: next
 --- !u!1 &554377587
 GameObject:
@@ -2652,7 +2652,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: previous
 --- !u!1001 &784382779
 PrefabInstance:
@@ -2892,7 +2892,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: save
 --- !u!1 &864785794
 GameObject:
@@ -3442,7 +3442,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: buy
 --- !u!114 &973552153
 MonoBehaviour:
@@ -4123,7 +4123,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: balance
 --- !u!1001 &1365920816
 PrefabInstance:
@@ -5745,7 +5745,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: load
 --- !u!114 &1573341870
 MonoBehaviour:
@@ -6287,9 +6287,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e31b07ef897a3ca4fb97457d44266b8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  onBalanceChanged:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!4 &1621119833
 Transform:
   m_ObjectHideFlags: 0
