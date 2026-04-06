@@ -411,6 +411,34 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "RightHand",
+            "id": "071eca8a-96f3-44dc-b256-84c42c39df37",
+            "actions": [
+                {
+                    "name": "OpenMenu",
+                    "type": "Button",
+                    "id": "196ce205-1e3b-43ea-be5c-9a60b42e1d08",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "185f94ab-3da5-4b0f-9465-e31a0a547d12",
+                    "path": "<XRController>{RightHand}/{SecondaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "OpenMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []
