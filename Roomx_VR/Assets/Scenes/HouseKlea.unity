@@ -453,7 +453,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 8400000, guid: 832d5888da37cbf47b25e16844151c7d, type: 2}
   m_TargetDisplay: 0
@@ -2772,6 +2772,7 @@ GameObject:
   - component: {fileID: 844411629}
   - component: {fileID: 844411631}
   - component: {fileID: 844411630}
+  - component: {fileID: 844411632}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -2895,6 +2896,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 844411628}
   m_CullTransparentMesh: 1
+--- !u!114 &844411632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844411628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
+  key: buy
 --- !u!1 &864785794
 GameObject:
   m_ObjectHideFlags: 0
@@ -4087,6 +4102,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 6b8140613b810274f8706d85eb75d1c2, type: 3}
       propertyPath: m_Name
       value: 123
+      objectReference: {fileID: 0}
+    - target: {fileID: 4356877828898064976, guid: 6b8140613b810274f8706d85eb75d1c2, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -6,11 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Menu.unity
+    guid: 3345293ad1a2e4245a85d15f9f45c390
+  - enabled: 1
+    path: Assets/Scenes/Sandbox 1.unity
+    guid: 27704d995e5a66545a7c2d1fd9a38e84
+  - enabled: 1
     path: Assets/Scenes/HouseKlea.unity
     guid: 23289dc44e19d784ca9b11de63ce1b9f
   - enabled: 1
     path: Assets/Scenes/HouseSidrit.unity
     guid: 94687e90cf0bc71498614b3f51cc8117
+  - enabled: 1
+    path: Assets/Scenes/HouseEnton.unity
+    guid: 99f12ca7fdbf4c14097e0bd98aa74e4e
   m_configObjects:
     Unity.XR.PXR.Settings: {fileID: 11400000, guid: 5882f851d230a6944907f5a215dda57c, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 745d2b355261c1947ab5632e17b0c7f0, type: 2}
