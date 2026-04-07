@@ -13,14 +13,15 @@ MonoBehaviour:
   m_Name: FancySessel
   m_EditorClassIdentifier: 
   itemName: Fancy Chair
-  description: 
+  description: Sun Lounge type chair , perfect to sit and chill while reading a book
+    and drinking a refreshing drink.
   descriptionAlbanian: 
   descriptionGerman: 
   icon: {fileID: 21300000, guid: 0ed5cba8ec5807b4c892e8f68c7cd55b, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: d9761b2964370dd45a09ee30e0f7749d, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 0
-  price: 0
+  price: 150
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

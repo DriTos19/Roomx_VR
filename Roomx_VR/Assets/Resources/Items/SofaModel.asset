@@ -13,14 +13,15 @@ MonoBehaviour:
   m_Name: SofaModel
   m_EditorClassIdentifier: 
   itemName: SofaModel
-  description: 
+  description: A deep-set couch suited for hosting guests, reading, or relaxing after
+    a long workday.
   descriptionAlbanian: 
   descriptionGerman: 
   icon: {fileID: 21300000, guid: 1a88b1d3f03c21547b0b8e7602c6ec36, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 05b1074adfc157d41a3549fc95f93905, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 0
-  price: 0
+  price: 99
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

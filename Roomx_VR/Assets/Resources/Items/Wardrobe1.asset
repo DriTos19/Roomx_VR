@@ -15,11 +15,13 @@ MonoBehaviour:
   itemName: Wardrobe
   description: A compact wardrobe that provides essential storage while saving space
     in smaller rooms.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: 4034ab340f6d7c94da5d78794b5366de, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: ed290f12ab086244fba92b87984ea4d9, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 5
-  price: 0
+  price: 255
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

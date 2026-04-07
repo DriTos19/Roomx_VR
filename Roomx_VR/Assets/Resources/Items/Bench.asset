@@ -15,11 +15,13 @@ MonoBehaviour:
   itemName: Bench
   description: A simple and practical seating option that can fit multiple people,
     ideal for hallways or outdoor spaces.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: 2b5c64078b2b66146be78e822ffe02b7, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 2a9e5584dcdcf294fb350d2167c1a00e, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 2
-  price: 0
+  price: 25
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

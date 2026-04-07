@@ -12,15 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50b67e15aeec206458735abb17af76e6, type: 3}
   m_Name: Esstetisch
   m_EditorClassIdentifier: 
-  itemName: Esstetisch
-  description: 
+  itemName: Wooden Table
+  description: Wooden Dining Table , perfect for the depth of the room the wooden
+    material brings warmth to the room.
   descriptionAlbanian: 
   descriptionGerman: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 0e3a4cfa49e69db40989e60533f3d40a, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 729b1be63dcd4224284432b86606195c, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 0
-  price: 0
+  price: 130
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

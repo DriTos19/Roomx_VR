@@ -15,11 +15,13 @@ MonoBehaviour:
   itemName: Kitchen
   description: A fully equipped kitchen setup designed for cooking, preparing meals,
     and enhancing the living space.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: 9380e8cb538314b44b3b40d66e483f79, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: fdf09783dd9f4114899c879b9bf38e03, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 5
-  price: 0
+  price: 120
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

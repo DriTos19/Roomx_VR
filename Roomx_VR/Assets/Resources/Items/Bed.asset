@@ -15,13 +15,13 @@ MonoBehaviour:
   itemName: Bed
   description: A comfortable bed designed for resting and sleeping, adding warmth
     and coziness to any room.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: ae071296b580e984495fc5712df61bfa, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 65054e551b2fe6f4faf5cfa0f39bd62b, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
-  teleportationArea: {fileID: 0}
-  makeObjectTeleportable: 1
   category: 1
-  price: 0
+  price: 100
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

@@ -1193,12 +1193,30 @@ MonoBehaviour:
   menuWidthOffset: 0
   allItems:
   - {fileID: 11400000, guid: 2f977c6216120eb42b4bc803a736d7f7, type: 2}
+  - {fileID: 11400000, guid: b9fc11719ec40d446a9c4aaecae6ff40, type: 2}
+  - {fileID: 11400000, guid: 716cc0b655da40c41a0e5d3cb6d2d3ca, type: 2}
+  - {fileID: 11400000, guid: c94f32b0dd7561746aa64b09b72b28fc, type: 2}
+  - {fileID: 11400000, guid: 6745fd163625fa54e85a47dd35433726, type: 2}
+  - {fileID: 11400000, guid: c03f68566a6da644db71c165489fadcb, type: 2}
+  - {fileID: 11400000, guid: 048a8c7e90d700b4192ded1ad173800a, type: 2}
+  - {fileID: 11400000, guid: 328c5a8284f1ca54f879ed36980685a1, type: 2}
+  - {fileID: 11400000, guid: 31213e44eade2be41a0f0bac7c5331a9, type: 2}
+  - {fileID: 11400000, guid: bef67fda1a0c575458d99e0deebe5ec7, type: 2}
+  - {fileID: 11400000, guid: 8b3a4de585cdced47b78c147e9650a62, type: 2}
+  - {fileID: 11400000, guid: b257e219a826da0429a25f2d6298315b, type: 2}
+  - {fileID: 11400000, guid: 1bd9f9f4a2ed56841bca1cb33f7853aa, type: 2}
+  - {fileID: 11400000, guid: 5e0ee3f6858448d4b98391be0a28b62c, type: 2}
+  - {fileID: 11400000, guid: fe77ad3dd4a53474da390610265cfc85, type: 2}
+  - {fileID: 11400000, guid: b712c099a27661943b7a2ecc5e42e5bc, type: 2}
+  - {fileID: 11400000, guid: 6c27ff1b4a035aa4cbace9231eaf09a5, type: 2}
+  - {fileID: 11400000, guid: 0379c88295ce5704e8977a4493a304fd, type: 2}
+  - {fileID: 11400000, guid: dd969579596d9a445a763670e8062b5c, type: 2}
   nextButton: {fileID: 265791759}
   prevButton: {fileID: 974830846}
-  tooltipPanel: {fileID: 0}
+  tooltipPanel: {fileID: 546781194}
   nameText: {fileID: 0}
-  descriptionText: {fileID: 0}
-  previewImage: {fileID: 0}
+  descriptionText: {fileID: 681253523}
+  previewImage: {fileID: 2049705845}
   balanceLabel: {fileID: 445193615}
   priceLabel: {fileID: 519739625}
   purchaseButton: {fileID: 1659667335}
@@ -4546,42 +4564,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd9f82377aeb9704193bd866d119aaa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  screenFade: 0
-  eyeTracking: 0
-  trackingMode: -1
-  sharpeningMode: 0
-  sharpeningEnhance: 0
-  faceTracking: 0
-  lipsyncTracking: 0
-  lateLatching: 0
-  latelatchingDebug: 0
-  bodyTracking: 0
-  foveationLevel: -1
-  adaptiveResolution: 0
-  eyeFoveationLevel: -1
-  foveatedRenderingMode: 0
-  openMRC: 1
-  foregroundLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  backgroundLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  backgroundCamObj: {fileID: 0}
-  foregroundCamObj: {fileID: 0}
-  mrcBackgroundRT: {fileID: 0}
-  mrcForegroundRT: {fileID: 0}
-  adaptiveResolutionPowerSetting: 1
-  minEyeTextureScale: 0.7
-  maxEyeTextureScale: 1.26
-  enableSuperResolution: 0
-  useRecommendedAntiAliasingLevel: 0
-  usePremultipliedAlpha: 0
-  useLayerBlend: 0
-  srcColor: 1
-  dstColor: 1
-  srcAlpha: 1
-  dstAlpha: 1
 --- !u!114 &1000836481
 MonoBehaviour:
   m_ObjectHideFlags: 0

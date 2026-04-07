@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: NightTable
   m_EditorClassIdentifier: 
   itemName: Night Table
-  description: night table
+  description: Perfect night table, there you can leave your phone to charge , can
+    put your night lamp , and enjoy your evening.
   descriptionAlbanian: 
   descriptionGerman: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 02b2714cc85cc2c47944cf2c9a89b1a7, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 0eaed03894c0bec459593dfcced99fb3, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 0

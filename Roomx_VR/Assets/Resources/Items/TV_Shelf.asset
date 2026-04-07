@@ -15,11 +15,13 @@ MonoBehaviour:
   itemName: TV Shelf
   description: A functional unit designed to hold a television along with media devices
     and accessories.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: 7063499d371d9c24d862272edb8ac02d, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 0086582cd2a9f1b46a083b08106b64f6, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 5
-  price: 0
+  price: 115
   useManualPlacementHeight: 1
   manualPlacementHeight: 1.2351826
   manualHeightAdjustSpeed: 2
