@@ -26,7 +26,7 @@ public class InventoryManager1 : InventoryManager
 
     protected override void Start()
     {
-        SetMenuState(false);
+        base.Start(); // registers purchaseButton listener and Budget/PurchaseManager events
 
         if (nextPageButton != null)
         {
@@ -119,5 +119,14 @@ public class InventoryManager1 : InventoryManager
         {
             base.SelectItem(data);
         }
+    }
+
+    protected override void OnPurchaseSuccess(InventoryItemData item)
+    {
+        CloseInventory();
+        if (WallPlacer_VR.Instance != null)
+            WallPlacer_VR.Instance.StartPlacement(item);
+        else if (PlacementManager.Instance != null)
+            PlacementManager.Instance.StartPlacement(item);
     }
 }

@@ -175,9 +175,18 @@ public class InventoryManager : MonoBehaviour
     public virtual void PreviousPage() { currentPage--; UpdateInventoryDisplay(); HideTooltip(); }
 
     private void RefreshBalanceUI(float balance) { if (balanceLabel) balanceLabel.text = $"{balance:F0}$"; }
-    private void RefreshPurchaseUI(InventoryItemData item) { if (priceLabel && item != null) priceLabel.text = $"{item.price:F0}$"; }
+    private void RefreshPurchaseUI(InventoryItemData item)
+    {
+        if (priceLabel && item != null) priceLabel.text = $"{item.price:F0}$";
+        SetPurchaseButtonInteractable(item != null);
+    }
     private void SetPurchaseButtonInteractable(bool state) { if (purchaseButton) purchaseButton.interactable = state; }
     private void ShowInsufficientFunds() { if (insufficientFundsNotice) StartCoroutine(FlashNotice()); }
     private IEnumerator FlashNotice() { insufficientFundsNotice.SetActive(true); yield return new WaitForSeconds(2f); insufficientFundsNotice.SetActive(false); }
-    private void OnPurchaseSuccess(InventoryItemData item) { CloseInventory(); PlacementManager.Instance.StartPlacement(item); }
+    protected virtual void OnPurchaseSuccess(InventoryItemData item)
+    {
+        CloseInventory();
+        if (PlacementManager.Instance != null)
+            PlacementManager.Instance.StartPlacement(item);
+    }
 }

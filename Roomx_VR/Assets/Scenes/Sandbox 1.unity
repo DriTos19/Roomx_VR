@@ -914,7 +914,7 @@ GameObject:
   - component: {fileID: 105283810}
   m_Layer: 0
   m_Name: Plane
-  m_TagString: Floor
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1512,42 +1512,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd9f82377aeb9704193bd866d119aaa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  screenFade: 0
-  eyeTracking: 0
-  trackingMode: -1
-  sharpeningMode: 0
-  sharpeningEnhance: 0
-  faceTracking: 0
-  lipsyncTracking: 0
-  lateLatching: 0
-  latelatchingDebug: 0
-  bodyTracking: 0
-  foveationLevel: -1
-  adaptiveResolution: 0
-  eyeFoveationLevel: -1
-  foveatedRenderingMode: 0
-  openMRC: 1
-  foregroundLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  backgroundLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  backgroundCamObj: {fileID: 0}
-  foregroundCamObj: {fileID: 0}
-  mrcBackgroundRT: {fileID: 0}
-  mrcForegroundRT: {fileID: 0}
-  adaptiveResolutionPowerSetting: 1
-  minEyeTextureScale: 0.7
-  maxEyeTextureScale: 1.26
-  enableSuperResolution: 0
-  useRecommendedAntiAliasingLevel: 0
-  usePremultipliedAlpha: 0
-  useLayerBlend: 0
-  srcColor: 1
-  dstColor: 1
-  srcAlpha: 1
-  dstAlpha: 1
 --- !u!114 &369156683
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2618,7 +2582,7 @@ MonoBehaviour:
   slotParent: {fileID: 794656994}
   slotPrefab: {fileID: 8936158477652089839, guid: 734c8a947030cf140aa415f9624c8e5f, type: 3}
   menuToggleButton:
-    m_UseReference: 0
+    m_UseReference: 1
     m_Action:
       m_Name: Menu Toggle Button
       m_Type: 0
@@ -2628,9 +2592,9 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: 0}
+    m_Reference: {fileID: -821121810972896091, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   uiPressAction:
-    m_UseReference: 0
+    m_UseReference: 1
     m_Action:
       m_Name: Ui Press
       m_Type: 0
@@ -2640,12 +2604,30 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: 0}
+    m_Reference: {fileID: -821121810972896091, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   distanceFromPlayer: 1.2
   menuHeightOffset: -0.2
   menuWidthOffset: 0
   allItems:
   - {fileID: 11400000, guid: 2f977c6216120eb42b4bc803a736d7f7, type: 2}
+  - {fileID: 11400000, guid: 716cc0b655da40c41a0e5d3cb6d2d3ca, type: 2}
+  - {fileID: 11400000, guid: c94f32b0dd7561746aa64b09b72b28fc, type: 2}
+  - {fileID: 11400000, guid: 6745fd163625fa54e85a47dd35433726, type: 2}
+  - {fileID: 11400000, guid: c03f68566a6da644db71c165489fadcb, type: 2}
+  - {fileID: 11400000, guid: 048a8c7e90d700b4192ded1ad173800a, type: 2}
+  - {fileID: 11400000, guid: 3519f9e38eaf973428db104166e6cb85, type: 2}
+  - {fileID: 11400000, guid: 9f4ea11d4afb0d443ae113447236c147, type: 2}
+  - {fileID: 11400000, guid: bef67fda1a0c575458d99e0deebe5ec7, type: 2}
+  - {fileID: 11400000, guid: b1551c9a5b83ddf42b4e3e9db2285e5d, type: 2}
+  - {fileID: 11400000, guid: 1bd9f9f4a2ed56841bca1cb33f7853aa, type: 2}
+  - {fileID: 11400000, guid: 5e0ee3f6858448d4b98391be0a28b62c, type: 2}
+  - {fileID: 11400000, guid: 6c27ff1b4a035aa4cbace9231eaf09a5, type: 2}
+  - {fileID: 11400000, guid: a50e7b753100fdf4bb6eba9b6338683a, type: 2}
+  - {fileID: 11400000, guid: a3734ce6b5b958143ade818d7d3561e6, type: 2}
+  - {fileID: 11400000, guid: 99d9a0869f660134e8fc63f6528ec8b2, type: 2}
+  - {fileID: 11400000, guid: 8aaa97b3be5357342a69811260e614a3, type: 2}
+  - {fileID: 11400000, guid: dcfbd7bb185c0b74a97c353a38804938, type: 2}
+  - {fileID: 11400000, guid: 0379c88295ce5704e8977a4493a304fd, type: 2}
   nextButton: {fileID: 0}
   prevButton: {fileID: 0}
   tooltipPanel: {fileID: 0}
@@ -3049,7 +3031,7 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+    m_Reference: {fileID: -8864847729717216274, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   rightInventoryGripAction:
     m_UseReference: 1
     m_Action:
@@ -3073,7 +3055,7 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+    m_Reference: {fileID: 5484176690563434992, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   rightHeightAdjustAction:
     m_UseReference: 1
     m_Action:
@@ -3121,7 +3103,7 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: -6131295136447488360, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+    m_Reference: {fileID: 372000237036888806, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   leftJoystickAction:
     m_UseReference: 1
     m_Action:
@@ -3837,7 +3819,6 @@ MonoBehaviour:
   slicePrefab: {fileID: 2074260755705545769, guid: 43d6a466026aa294ab4e2febf28e918c, type: 3}
   totalButtons: 8
   radius: 8.5
-  controllerNode: 4
   previewImageScale: 1
 --- !u!1 &1877314976
 GameObject:

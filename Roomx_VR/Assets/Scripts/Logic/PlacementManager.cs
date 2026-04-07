@@ -92,7 +92,8 @@ public class PlacementManager : MonoBehaviour
 
         HandleRotation();
 
-        if (cancelAction.action.WasPressedThisFrame() && !triggerPress.action.WasPressedThisFrame())
+        if (cancelAction.action != null && cancelAction.action.WasPressedThisFrame() &&
+            (triggerPress.action == null || !triggerPress.action.WasPressedThisFrame()))
         {
             CancelPlacement();
             return;
@@ -105,12 +106,15 @@ public class PlacementManager : MonoBehaviour
 
     void HandleRotation()
     {
+        if (rotateAction.action == null) return;
         float rotateInput = rotateAction.action.ReadValue<Vector2>().x;
         currentRotation += rotateInput * rotationSpeed * Time.deltaTime;
     }
 
     void HandlePositioning()
     {
+        if (rayInteractor == null) return;
+
         bool gotHit = rayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit hit);
 
         if (!gotHit)
@@ -138,13 +142,20 @@ public class PlacementManager : MonoBehaviour
                 targetPos.z = Mathf.Round(targetPos.z / gridSize) * gridSize;
             }
 
+            // Place at hit point first, then lift so the bottom of the object sits on the surface
+            ghostObject.transform.position = targetPos;
+            ghostObject.transform.rotation = Quaternion.Euler(0, currentRotation, 0);
+
+            float bottomOffset = GetBottomToPivotOffset(ghostObject);
+            targetPos.y = hit.point.y + bottomOffset;
+
             ghostObject.transform.position = targetPos;
             ghostObject.transform.rotation = Quaternion.Euler(0, currentRotation, 0);
 
             isValid = ((1 << hit.collider.gameObject.layer) & groundLayer) != 0;
             ApplyMaterial(isValid ? validMaterial : invalidMaterial);
 
-            if (triggerPress.action.WasPressedThisFrame() && canPlaceThisFrame)
+            if (triggerPress.action != null && triggerPress.action.WasPressedThisFrame() && canPlaceThisFrame)
             {
                 if (isValid) FinalizePlacement();
             }
@@ -225,5 +236,31 @@ public class PlacementManager : MonoBehaviour
         obj.layer = newLayer;
         foreach (Transform child in obj.transform)
             SetLayerRecursively(child.gameObject, newLayer);
+    }
+
+    // Returns the vertical distance from the object's pivot to the bottom of its bounds,
+    // so the object can be lifted to sit on the surface rather than sink into it.
+    float GetBottomToPivotOffset(GameObject obj)
+    {
+        Bounds bounds = new Bounds(obj.transform.position, Vector3.zero);
+        bool hasBounds = false;
+
+        foreach (Renderer r in obj.GetComponentsInChildren<Renderer>())
+        {
+            if (!hasBounds) { bounds = r.bounds; hasBounds = true; }
+            else bounds.Encapsulate(r.bounds);
+        }
+
+        if (!hasBounds)
+        {
+            foreach (Collider c in obj.GetComponentsInChildren<Collider>())
+            {
+                if (!hasBounds) { bounds = c.bounds; hasBounds = true; }
+                else bounds.Encapsulate(c.bounds);
+            }
+        }
+
+        if (!hasBounds) return 0f;
+        return obj.transform.position.y - bounds.min.y;
     }
 }
