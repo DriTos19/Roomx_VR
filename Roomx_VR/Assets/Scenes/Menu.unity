@@ -5276,8 +5276,10 @@ MonoBehaviour:
   helpPanel: {fileID: 0}
   houseSelectionPanel: {fileID: 1844177498}
   languagePanel: {fileID: 355965851}
-  houseButtons: []
-  houseSceneNames: []
+  houseButtons:
+  - {fileID: 1598646352}
+  houseSceneNames:
+  - HouseKlea
   nextButton: {fileID: 1455774472}
   previousButton: {fileID: 1614341964}
   backgroundMusic: {fileID: 0}

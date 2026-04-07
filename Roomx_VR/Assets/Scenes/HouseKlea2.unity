@@ -234,22 +234,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 91856275}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79b6a0b54f573dd4e8f53f050eb06bdc, type: 3}
+  m_Script: {fileID: 11500000, guid: 97c1b3f99e7ba2642a95aa706a7f1b45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   onPurchaseSuccess:
     m_PersistentCalls:
       m_Calls: []
-    m_CallsDirty: 1
   onPurchaseFailed:
     m_PersistentCalls:
       m_Calls: []
-    m_CallsDirty: 1
   onItemSelected:
     m_PersistentCalls:
       m_Calls: []
-    m_CallsDirty: 1
-  <SelectedItem>k__BackingField: {fileID: 0}
 --- !u!4 &91856277
 Transform:
   m_ObjectHideFlags: 0
@@ -936,19 +932,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aedb7652b6ce7224f87bf2566c3d4f19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rayInteractor: {fileID: 116341911}
-  triggerPress:
-    m_UseReference: 1
-    m_Action:
-      m_Name: Trigger Press
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 76631d92-7ed8-41cc-8763-eaa9b82696fb
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!1001 &116487085
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1192,7 +1175,7 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: 138396950478516224, guid: da2b439d1a2de5c46a4f428f8cf4fe19, type: 3}
+    m_Reference: {fileID: -8568866643343392156, guid: 0be0028c24f2a4c14a96b6aa39055933, type: 3}
   uiPressAction:
     m_UseReference: 0
     m_Action:
@@ -1205,20 +1188,21 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: 0}
-  distanceFromPlayer: 1.2
-  menuHeightOffset: -0.2
+  distanceFromPlayer: 1
+  menuHeightOffset: 0.2
   menuWidthOffset: 0
-  allItems: []
-  nextButton: {fileID: 0}
-  prevButton: {fileID: 0}
+  allItems:
+  - {fileID: 11400000, guid: 2f977c6216120eb42b4bc803a736d7f7, type: 2}
+  nextButton: {fileID: 265791759}
+  prevButton: {fileID: 974830846}
   tooltipPanel: {fileID: 0}
   nameText: {fileID: 0}
   descriptionText: {fileID: 0}
   previewImage: {fileID: 0}
-  balanceLabel: {fileID: 0}
-  priceLabel: {fileID: 0}
-  purchaseButton: {fileID: 0}
-  insufficientFundsNotice: {fileID: 0}
+  balanceLabel: {fileID: 445193615}
+  priceLabel: {fileID: 519739625}
+  purchaseButton: {fileID: 1659667335}
+  insufficientFundsNotice: {fileID: 431041235}
 --- !u!1001 &164427448
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4679,8 +4663,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fc822c58d3f42a42ad94e3725ef4b39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  balanceText: {fileID: 1016470974}
-  prefix: $
 --- !u!114 &1016470974
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6453,15 +6435,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1853702484}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4c6bbf8c52745e408333bb4727d0e5a, type: 3}
+  m_Script: {fileID: 11500000, guid: e31b07ef897a3ca4fb97457d44266b8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingBalance: 1000
   onBalanceChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_CallsDirty: 1
-  _balance: 0
 --- !u!4 &1853702486
 Transform:
   m_ObjectHideFlags: 0
@@ -8106,7 +8085,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2131242177}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!20 &2131242180
 Camera:
   m_ObjectHideFlags: 0
