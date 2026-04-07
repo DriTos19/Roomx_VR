@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR;
 using System.Collections.Generic;
 
 public class MaterialWheelManager : MonoBehaviour
@@ -15,10 +14,7 @@ public class MaterialWheelManager : MonoBehaviour
     public int totalButtons = 8;
     public float radius = 8.5f;
 
-    [Header("XR Input")]
-    public XRNode controllerNode = XRNode.LeftHand; // LEFT HAND now
-
-    private bool gripPressedLastFrame = false;
+    private bool stickInUse;
 
     [Header("Preview")]
     [Range(0.1f, 1f)]
@@ -35,31 +31,58 @@ public class MaterialWheelManager : MonoBehaviour
     private readonly List<Material> materialVariants = new List<Material>();
     private readonly List<Button> spawnedSlices = new List<Button>();
 
-    private InputDevice controllerDevice;
-    private bool stickInUse;
+
 
     void Start()
     {
         if (wheelContainer != null)
             wheelContainer.gameObject.SetActive(false);
-
-        InitializeXRDevice();
     }
 
     void Update()
     {
-        if (!controllerDevice.isValid)
-            InitializeXRDevice();
-        
         if (!isOpen)
             return;
-
-        HandleStickSelection();
     }
 
-    void InitializeXRDevice()
+    public void UpdateJoystickHighlight(Vector2 stick)
     {
-        controllerDevice = InputDevices.GetDeviceAtXRNode(controllerNode);
+        if (!isOpen || materialVariants.Count == 0)
+            return;
+
+        if (stick.magnitude < 0.2f)
+        {
+            stickInUse = false;
+            return;
+        }
+
+        if (stickInUse)
+            return;
+
+        float angle = Mathf.Atan2(stick.y, stick.x);
+        if (angle < 0f) angle += Mathf.PI * 2f;
+
+        int newIndex = Mathf.RoundToInt(angle / (Mathf.PI * 2f / materialVariants.Count)) % materialVariants.Count;
+
+        if (newIndex != highlightedIndex)
+        {
+            highlightedIndex = newIndex;
+            PreviewVariant(highlightedIndex);
+        }
+
+        stickInUse = true;
+    }
+
+    void PreviewVariant(int variantIndex)
+    {
+        if (currentObject == null) return;
+        if (variantIndex < 0 || variantIndex >= materialVariants.Count) return;
+
+        Material[] mats = currentObject.materials;
+        if (currentSlot < 0 || currentSlot >= mats.Length) return;
+
+        mats[currentSlot] = new Material(materialVariants[variantIndex]);
+        currentObject.materials = mats;
     }
 
     public void SelectObject(Renderer newRenderer)
@@ -142,34 +165,6 @@ public class MaterialWheelManager : MonoBehaviour
         currentObject.materials = mats;
     }
 
-    void HandleStickSelection()
-    {
-        if (!controllerDevice.isValid || materialVariants.Count == 0)
-            return;
-
-        Vector2 stick;
-        controllerDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out stick);
-
-        if (stick.magnitude < 0.2f)
-        {
-            stickInUse = false;
-            return;
-        }
-
-        if (stickInUse)
-            return;
-
-        float angle = Mathf.Atan2(stick.y, stick.x);
-        if (angle < 0f)
-            angle += Mathf.PI * 2f;
-
-        float sliceSize = Mathf.PI * 2f / materialVariants.Count;
-        int newIndex = Mathf.RoundToInt(angle / sliceSize) % materialVariants.Count;
-
-        highlightedIndex = newIndex;
-        stickInUse = true;
-    }
-
     void BuildMaterialVariants()
     {
         materialVariants.Clear();
@@ -178,56 +173,19 @@ public class MaterialWheelManager : MonoBehaviour
             return;
 
         Material sourceMat = new Material(wheelBaseMaterialSnapshot);
-        Color baseColor = GetMaterialColor(sourceMat);
 
-        List<Color> colors = new List<Color>();
-
-        Color lighter1 = MultiplyColor(baseColor, 1.15f);
-        Color lighter2 = MultiplyColor(baseColor, 1.35f);
-        Color darker1 = MultiplyColor(baseColor, 0.85f);
-        Color darker2 = MultiplyColor(baseColor, 0.65f);
-
-        Color reddish = new Color(
-            Mathf.Clamp01(baseColor.r * 1.20f),
-            Mathf.Clamp01(baseColor.g * 0.90f),
-            Mathf.Clamp01(baseColor.b * 0.90f),
-            1f
-        );
-
-        Color greenish = new Color(
-            Mathf.Clamp01(baseColor.r * 0.90f),
-            Mathf.Clamp01(baseColor.g * 1.20f),
-            Mathf.Clamp01(baseColor.b * 0.90f),
-            1f
-        );
-
-        Color bluish = new Color(
-            Mathf.Clamp01(baseColor.r * 0.90f),
-            Mathf.Clamp01(baseColor.g * 0.90f),
-            Mathf.Clamp01(baseColor.b * 1.20f),
-            1f
-        );
-
-        Color magentaish = new Color(
-            Mathf.Clamp01(baseColor.r * 1.15f),
-            Mathf.Clamp01(baseColor.g * 0.85f),
-            Mathf.Clamp01(baseColor.b * 1.15f),
-            1f
-        );
-
-        lighter1.a = 1f;
-        lighter2.a = 1f;
-        darker1.a = 1f;
-        darker2.a = 1f;
-
-        colors.Add(lighter1);
-        colors.Add(lighter2);
-        colors.Add(darker1);
-        colors.Add(darker2);
-        colors.Add(reddish);
-        colors.Add(greenish);
-        colors.Add(bluish);
-        colors.Add(magentaish);
+        // Use strongly distinct colors so any change is immediately visible regardless of base material
+        List<Color> colors = new List<Color>
+        {
+            new Color(1f,   0.2f, 0.2f, 1f), // red
+            new Color(0.2f, 1f,   0.2f, 1f), // green
+            new Color(0.2f, 0.4f, 1f,   1f), // blue
+            new Color(1f,   0.9f, 0.1f, 1f), // yellow
+            new Color(0.2f, 0.9f, 0.9f, 1f), // cyan
+            new Color(0.9f, 0.2f, 0.9f, 1f), // magenta
+            new Color(1f,   1f,   1f,   1f), // white
+            new Color(0.1f, 0.1f, 0.1f, 1f), // black
+        };
 
         int count = Mathf.Min(totalButtons, colors.Count);
 
@@ -315,16 +273,6 @@ public class MaterialWheelManager : MonoBehaviour
         }
     }
 
-    Color MultiplyColor(Color source, float multiplier)
-    {
-        return new Color(
-            Mathf.Clamp01(source.r * multiplier),
-            Mathf.Clamp01(source.g * multiplier),
-            Mathf.Clamp01(source.b * multiplier),
-            1f
-        );
-    }
-
     Color GetMaterialColor(Material mat)
     {
         if (mat == null)
@@ -355,16 +303,19 @@ public class MaterialWheelManager : MonoBehaviour
 
     void SetMaterialColor(Material mat, Color color)
     {
-        if (mat == null)
-            return;
-
+        if (mat == null) return;
         color.a = 1f;
 
-        if (mat.HasProperty("_BaseColor"))
-            mat.SetColor("_BaseColor", color);
+        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+        if (mat.HasProperty("_Color"))     mat.SetColor("_Color", color);
 
-        if (mat.HasProperty("_Color"))
-            mat.SetColor("_Color", color);
+        // Fallback: Unity's built-in color setter works across Legacy, Standard and URP shaders
+        mat.color = color;
+    }
+
+    public void ApplyHighlightedVariant()
+    {
+        ApplyVariant(highlightedIndex);
     }
 
     void ApplyVariant(int variantIndex)
