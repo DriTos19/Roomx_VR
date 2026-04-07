@@ -154,7 +154,12 @@ public class WallPlacer_VR : MonoBehaviour
 
         if (IsMaterialWheelOpen)
         {
-            if (leftApplyPressed)
+            // Feed joystick input to the wheel using the proven InputAction (not XRNode)
+            if (leftJoystickAction.action != null)
+                materialWheelController.UpdateJoystickHighlight(leftJoystickAction.action.ReadValue<Vector2>());
+
+            // Right trigger OR dedicated apply button both confirm the selection
+            if (rightPlacePressed || leftApplyPressed)
                 TryApplyCurrentMaterialSelection();
 
             return;
@@ -309,41 +314,32 @@ public class WallPlacer_VR : MonoBehaviour
         if (previewInstance == null || rightControllerTransform == null)
             return;
 
-        Bounds localBounds = GetLocalObjectBounds(previewInstance);
-        float bottomToPivotOffset = GetBottomToPivotOffset(localBounds, previewInstance.transform.lossyScale);
+        // Rotation must be set before reading bounds
+        previewInstance.transform.rotation = Quaternion.Euler(currentPlacementRotationOffset);
 
-        Vector3 rawTargetPos =
+        Vector3 targetPos =
             rightControllerTransform.position +
             rightControllerTransform.forward * placeDistance +
             rightControllerTransform.up * controllerUpOffset;
 
-        Vector3 targetPos = rawTargetPos;
-
         if (snapXZToGrid)
             targetPos = SnapToGridXZ(targetPos);
 
-        previewInstance.transform.rotation = Quaternion.Euler(currentPlacementRotationOffset);
-
         if (useManualPlacementHeight)
         {
-            Vector3 manualPos = new Vector3(
-                targetPos.x,
-                manualPlacementHeight + bottomToPivotOffset + surfaceOffset,
-                targetPos.z
-            );
-
             if (lockManualHeightXZToGrid)
-                manualPos = new Vector3(SnapToGridValue(manualPos.x), manualPos.y, SnapToGridValue(manualPos.z));
+                targetPos = new Vector3(SnapToGridValue(targetPos.x), targetPos.y, SnapToGridValue(targetPos.z));
 
-            previewInstance.transform.position = manualPos;
+            SnapPreviewBottomToY(manualPlacementHeight + surfaceOffset, targetPos);
             canPlaceCurrentPreview = true;
             SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
             return;
         }
 
-        if (TryGetStablePlacementPosition(targetPos, localBounds, bottomToPivotOffset, out Vector3 solvedPos, out _))
+        // Raycast straight down to find the Ground surface, ignoring placed objects
+        if (TryFindGroundY(targetPos, out float groundY))
         {
-            previewInstance.transform.position = solvedPos;
+            SnapPreviewBottomToY(groundY + surfaceOffset, targetPos);
             canPlaceCurrentPreview = true;
             SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
         }
@@ -355,106 +351,72 @@ public class WallPlacer_VR : MonoBehaviour
         }
     }
 
-    bool TryGetStablePlacementPosition(Vector3 targetPos, Bounds localBounds, float bottomToPivotOffset, out Vector3 finalPos, out GameObject supportObject)
+    // Cast straight down from above targetPos; return the Y of the first Ground surface found,
+    // skipping the preview itself and any already-placed objects.
+    bool TryFindGroundY(Vector3 targetPos, out float groundY)
     {
-        finalPos = targetPos;
-        supportObject = null;
+        groundY = 0f;
 
-        Vector3 scaledExtents = Vector3.Scale(localBounds.extents, previewInstance.transform.lossyScale);
-        Vector3 centerOffset = GetBoundsCenterOffset(localBounds, previewInstance.transform.lossyScale);
+        Vector3 rayOrigin = new Vector3(targetPos.x, targetPos.y + 25f, targetPos.z);
+        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, 50f, placementSurfaceMask);
 
-        Vector3 halfExtents = new Vector3(
-            Mathf.Max(scaledExtents.x * 0.95f, 0.01f),
-            0.05f,
-            Mathf.Max(scaledExtents.z * 0.95f, 0.01f)
-        );
+        // Sort ascending by distance so we evaluate highest surfaces first
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-        Vector3 boxCenter = new Vector3(
-            targetPos.x + centerOffset.x,
-            maxDistance,
-            targetPos.z + centerOffset.z
-        );
-
-        Collider[] hits = Physics.OverlapBox(
-            boxCenter,
-            new Vector3(halfExtents.x, maxDistance, halfExtents.z),
-            Quaternion.identity,
-            placementSurfaceMask
-        );
-
-        Collider bestSupportCollider = null;
-        float bestTopY = float.NegativeInfinity;
-
-        foreach (Collider col in hits)
+        foreach (RaycastHit hit in hits)
         {
-            if (col == null)
-                continue;
+            if (hit.collider == null) continue;
 
-            GameObject root = GetPlacedObjectRoot(col.transform);
-            if (root == previewInstance || root == gameObject)
-                continue;
+            // Skip the preview object's own colliders
+            if (previewInstance != null && hit.collider.transform.IsChildOf(previewInstance.transform)) continue;
 
-            float topY = col.bounds.max.y;
-
-            if (topY <= maxDistance && topY > bestTopY)
+            // Only accept Ground-tagged surfaces — placed objects are never tagged Ground
+            if (hit.collider.CompareTag("Ground"))
             {
-                bestTopY = topY;
-                bestSupportCollider = col;
+                groundY = hit.point.y;
+                return true;
             }
         }
 
-        if (bestSupportCollider == null)
-            return false;
-
-        supportObject = bestSupportCollider.transform.root.gameObject;
-
-        Vector3 candidatePos = new Vector3(
-            targetPos.x,
-            bestSupportCollider.bounds.max.y + bottomToPivotOffset + surfaceOffset,
-            targetPos.z
-        );
-
-        if (WouldOverlapAtPosition(candidatePos, localBounds, supportObject))
-            return false;
-
-        finalPos = candidatePos;
-        return true;
+        return false;
     }
 
-    bool WouldOverlapAtPosition(Vector3 candidatePos, Bounds localBounds, GameObject supportObject)
+    // Place the preview so its bottom mesh edge sits exactly at targetY.
+    // Uses world-space renderer bounds — works for any pivot offset, scale, or rotation.
+    void SnapPreviewBottomToY(float targetY, Vector3 targetPos)
     {
-        Vector3 scaledExtents = Vector3.Scale(localBounds.extents, previewInstance.transform.lossyScale);
-        Vector3 centerOffset = GetBoundsCenterOffset(localBounds, previewInstance.transform.lossyScale);
+        // Step 1: position at targetY so Unity can compute world bounds
+        previewInstance.transform.position = new Vector3(targetPos.x, targetY, targetPos.z);
 
-        Vector3 halfExtents = scaledExtents * overlapShrink;
-        Vector3 worldCenter = candidatePos + centerOffset;
+        // Step 2: read world-space bounds (accurate after rotation/scale are applied)
+        Bounds b = GetWorldRendererBounds(previewInstance);
 
-        Collider[] overlaps = Physics.OverlapBox(
-            worldCenter,
-            halfExtents,
-            Quaternion.identity,
-            placementSurfaceMask
-        );
+        // Step 3: lift so the bottom of the mesh sits on targetY, not the pivot
+        float correction = targetY - b.min.y;
+        previewInstance.transform.position = new Vector3(targetPos.x, targetY + correction, targetPos.z);
+    }
 
-        foreach (Collider col in overlaps)
+    Bounds GetWorldRendererBounds(GameObject obj)
+    {
+        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>(true);
+
+        if (renderers.Length > 0)
         {
-            if (col == null)
-                continue;
-
-            GameObject root = GetPlacedObjectRoot(col.transform);
-            if (root == null)
-                continue;
-
-            if (root == previewInstance || root == gameObject)
-                continue;
-
-            if (root == supportObject)
-                continue;
-
-            return true;
+            Bounds b = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++) b.Encapsulate(renderers[i].bounds);
+            return b;
         }
 
-        return false;
+        // Fallback: use collider bounds
+        Collider[] cols = obj.GetComponentsInChildren<Collider>(true);
+        if (cols.Length > 0)
+        {
+            Bounds b = cols[0].bounds;
+            for (int i = 1; i < cols.Length; i++) b.Encapsulate(cols[i].bounds);
+            return b;
+        }
+
+        return new Bounds(obj.transform.position, Vector3.one);
     }
 
     void PlaceObject()
@@ -605,7 +567,7 @@ public class WallPlacer_VR : MonoBehaviour
         if (materialWheelController == null || !materialWheelController.IsOpen())
             return;
 
-        materialWheelController.CloseWheel();
+        materialWheelController.ApplyHighlightedVariant();
     }
 
     void CancelPlacement()
@@ -725,59 +687,6 @@ public class WallPlacer_VR : MonoBehaviour
             actionProperty.action.Disable();
     }
 
-    Bounds GetLocalObjectBounds(GameObject obj)
-    {
-        Collider[] colliders = obj.GetComponentsInChildren<Collider>(true);
-
-        if (colliders.Length > 0)
-        {
-            Bounds bounds = new Bounds(obj.transform.InverseTransformPoint(colliders[0].bounds.center), Vector3.zero);
-
-            foreach (Collider c in colliders)
-            {
-                Bounds worldBounds = c.bounds;
-                Vector3 localCenter = obj.transform.InverseTransformPoint(worldBounds.center);
-                Vector3 localSize = obj.transform.InverseTransformVector(worldBounds.size);
-
-                Bounds localBounds = new Bounds(
-                    localCenter,
-                    new Vector3(Mathf.Abs(localSize.x), Mathf.Abs(localSize.y), Mathf.Abs(localSize.z))
-                );
-
-                bounds.Encapsulate(localBounds.min);
-                bounds.Encapsulate(localBounds.max);
-            }
-
-            return bounds;
-        }
-
-        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>(true);
-
-        if (renderers.Length > 0)
-        {
-            Bounds bounds = new Bounds(obj.transform.InverseTransformPoint(renderers[0].bounds.center), Vector3.zero);
-
-            foreach (Renderer r in renderers)
-            {
-                Bounds worldBounds = r.bounds;
-                Vector3 localCenter = obj.transform.InverseTransformPoint(worldBounds.center);
-                Vector3 localSize = obj.transform.InverseTransformVector(worldBounds.size);
-
-                Bounds localBounds = new Bounds(
-                    localCenter,
-                    new Vector3(Mathf.Abs(localSize.x), Mathf.Abs(localSize.y), Mathf.Abs(localSize.z))
-                );
-
-                bounds.Encapsulate(localBounds.min);
-                bounds.Encapsulate(localBounds.max);
-            }
-
-            return bounds;
-        }
-
-        return new Bounds(Vector3.zero, Vector3.one);
-    }
-
     void ApplySavedMaterials(GameObject obj, bool isPreview)
     {
         if (lastSavedMaterials == null)
@@ -891,22 +800,6 @@ public class WallPlacer_VR : MonoBehaviour
     float SnapToGridValue(float value)
     {
         return Mathf.Round(value / gridSize) * gridSize;
-    }
-
-    Vector3 GetBoundsCenterOffset(Bounds localBounds, Vector3 lossyScale)
-    {
-        return new Vector3(
-            localBounds.center.x * lossyScale.x,
-            localBounds.center.y * lossyScale.y,
-            localBounds.center.z * lossyScale.z
-        );
-    }
-
-    float GetBottomToPivotOffset(Bounds localBounds, Vector3 lossyScale)
-    {
-        float bottomLocalY = localBounds.min.y;
-        float bottomWorldY = bottomLocalY * lossyScale.y;
-        return -bottomWorldY;
     }
 
     void DestroyIfExists(GameObject obj)
