@@ -15,6 +15,7 @@ public class PlacementManager : MonoBehaviour
 
     [Header("Layers & Materials")]
     public LayerMask groundLayer;
+    public LayerMask blockedLayers; // Set to Wall + Furniture in Inspector
     public Material validMaterial;
     public Material invalidMaterial;
 
@@ -29,7 +30,6 @@ public class PlacementManager : MonoBehaviour
     private bool isValid = false;
     private bool canPlaceThisFrame = false;
 
-    // Cooldown after placement so double-click pickup doesn't fire instantly
     private float placementCooldown = 0f;
     private const float PLACEMENT_COOLDOWN_TIME = 0.5f;
 
@@ -57,8 +57,6 @@ public class PlacementManager : MonoBehaviour
     public void PickUpFurniture(GameObject furniture)
     {
         if (isPlacing || furniture == null) return;
-
-        // Check cooldown so we don't immediately re-pickup after placing
         if (Time.time < placementCooldown) return;
 
         FurniturePrefabReference existingRef = furniture.GetComponent<FurniturePrefabReference>();
@@ -71,7 +69,7 @@ public class PlacementManager : MonoBehaviour
 
         ghostObject = furniture;
         PrepareGhost();
-        canPlaceThisFrame = false; // prevent instant re-place
+        canPlaceThisFrame = false;
     }
 
     private void PrepareGhost()
@@ -129,11 +127,23 @@ public class PlacementManager : MonoBehaviour
             gotHit = hit.collider != null;
         }
 
-        if (gotHit)
+        if (gotHit && hit.collider != null)
         {
-            if (ghostObject == null) return;
-
             ghostObject.SetActive(true);
+
+            int hitLayer = hit.collider.gameObject.layer;
+
+            // Check if ray hit a blocked layer (wall, furniture)
+            bool hitBlockedLayer = ((1 << hitLayer) & blockedLayers) != 0;
+
+            // Only valid if hitting ground and NOT hitting blocked layer
+            bool hitsGround = ((1 << hitLayer) & groundLayer) != 0;
+
+            // Also check if ghost overlaps with walls or furniture
+            bool overlapsBlocked = CheckOverlapWithBlockedLayers();
+
+            isValid = hitsGround && !hitBlockedLayer && !overlapsBlocked;
+
             Vector3 targetPos = hit.point;
 
             if (enableSnapping)
@@ -142,28 +152,66 @@ public class PlacementManager : MonoBehaviour
                 targetPos.z = Mathf.Round(targetPos.z / gridSize) * gridSize;
             }
 
-            // Place at hit point first, then lift so the bottom of the object sits on the surface
-            ghostObject.transform.position = targetPos;
-            ghostObject.transform.rotation = Quaternion.Euler(0, currentRotation, 0);
-
             float bottomOffset = GetBottomToPivotOffset(ghostObject);
             targetPos.y = hit.point.y + bottomOffset;
 
             ghostObject.transform.position = targetPos;
             ghostObject.transform.rotation = Quaternion.Euler(0, currentRotation, 0);
 
-            isValid = ((1 << hit.collider.gameObject.layer) & groundLayer) != 0;
             ApplyMaterial(isValid ? validMaterial : invalidMaterial);
 
-            if (triggerPress.action != null && triggerPress.action.WasPressedThisFrame() && canPlaceThisFrame)
+            if (triggerPress.action != null &&
+                triggerPress.action.WasPressedThisFrame() &&
+                canPlaceThisFrame && isValid)
             {
-                if (isValid) FinalizePlacement();
+                FinalizePlacement();
             }
         }
         else
         {
+            isValid = false;
             if (ghostObject != null) ApplyMaterial(invalidMaterial);
         }
+    }
+
+    // Checks if the ghost object overlaps with walls or already placed furniture
+    bool CheckOverlapWithBlockedLayers()
+    {
+        if (ghostObject == null) return false;
+
+        Bounds bounds = GetGhostBounds();
+
+        // Slightly shrink bounds to avoid false positives at edges
+        Vector3 halfExtents = bounds.extents * 0.85f;
+
+        Collider[] hits = Physics.OverlapBox(
+            bounds.center,
+            halfExtents,
+            ghostObject.transform.rotation,
+            blockedLayers
+        );
+
+        return hits.Length > 0;
+    }
+
+    Bounds GetGhostBounds()
+    {
+        Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0)
+        {
+            Collider[] cols = ghostObject.GetComponentsInChildren<Collider>();
+            if (cols.Length > 0)
+            {
+                Bounds b = cols[0].bounds;
+                foreach (var c in cols) b.Encapsulate(c.bounds);
+                return b;
+            }
+            return new Bounds(ghostObject.transform.position, Vector3.one);
+        }
+
+        Bounds bounds = renderers[0].bounds;
+        foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+        return bounds;
     }
 
     void FinalizePlacement()
@@ -187,13 +235,11 @@ public class PlacementManager : MonoBehaviour
             prefabRef.itemData = _currentItemData;
         }
 
-        // Add interactable so it can be picked up again
         if (ghostObject.GetComponent<FurnitureInteractable>() == null)
             ghostObject.AddComponent<FurnitureInteractable>();
 
         FurnitureSaveManager.Instance?.RegisterFurniture(ghostObject);
 
-        // Set cooldown so double-click pickup doesn't fire immediately
         placementCooldown = Time.time + PLACEMENT_COOLDOWN_TIME;
 
         _currentItemData = null;
@@ -238,8 +284,6 @@ public class PlacementManager : MonoBehaviour
             SetLayerRecursively(child.gameObject, newLayer);
     }
 
-    // Returns the vertical distance from the object's pivot to the bottom of its bounds,
-    // so the object can be lifted to sit on the surface rather than sink into it.
     float GetBottomToPivotOffset(GameObject obj)
     {
         Bounds bounds = new Bounds(obj.transform.position, Vector3.zero);
