@@ -90,8 +90,16 @@ public class WallPlacer_VR : MonoBehaviour
     public bool IsMaterialWheelOpen => materialWheelController != null && materialWheelController.IsOpen();
 
     // NEW: movement is only allowed when not placing, not editing, and no wheel is open
-    public bool CanMove => !isPlacing && !isEditingExistingObject && !IsMaterialWheelOpen;
-
+    public bool CanMove
+    {
+        get
+        {
+            if (IsMaterialWheelOpen) return false;
+            if (isPlacing) return false;
+            if (isEditingExistingObject) return false;
+            return true;
+        }
+    }
     // NEW: safe movement input getter for your locomotion script
     public Vector2 MovementInput
     {
@@ -105,6 +113,24 @@ public class WallPlacer_VR : MonoBehaviour
         }
     }
 
+    public bool ShouldBlockMovement
+    {
+        get
+        {
+            if (IsMaterialWheelOpen)
+                return true;
+
+            if (isPlacing && useManualPlacementHeight && rightHeightAdjustAction.action != null)
+            {
+                Vector2 stick = rightHeightAdjustAction.action.ReadValue<Vector2>();
+                if (Mathf.Abs(stick.y) >= joystickDeadzone)
+                    return true;
+            }
+
+            return false;
+        }
+    }
+    
     void Awake()
     {
         Instance = this;
@@ -330,14 +356,27 @@ public class WallPlacer_VR : MonoBehaviour
             if (lockManualHeightXZToGrid)
                 targetPos = new Vector3(SnapToGridValue(targetPos.x), targetPos.y, SnapToGridValue(targetPos.z));
 
-            SnapPreviewBottomToY(manualPlacementHeight + surfaceOffset, targetPos);
-            canPlaceCurrentPreview = true;
-            SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
+            // NEW: detect support surface even for manual-height objects
+            if (TryFindSupportY(targetPos, out float supportY))
+            {
+                // manualPlacementHeight becomes an offset above the detected surface
+                SnapPreviewBottomToY(supportY + manualPlacementHeight + surfaceOffset, targetPos);
+                canPlaceCurrentPreview = true;
+                SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
+            }
+            else
+            {
+                // fallback if nothing is below
+                SnapPreviewBottomToY(manualPlacementHeight + surfaceOffset, targetPos);
+                canPlaceCurrentPreview = true;
+                SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
+            }
+
             return;
         }
 
-        // Raycast straight down to find the Ground surface, ignoring placed objects
-        if (TryFindGroundY(targetPos, out float groundY))
+        // Normal placement also uses the same support detection
+        if (TryFindSupportY(targetPos, out float groundY))
         {
             SnapPreviewBottomToY(groundY + surfaceOffset, targetPos);
             canPlaceCurrentPreview = true;
@@ -353,27 +392,36 @@ public class WallPlacer_VR : MonoBehaviour
 
     // Cast straight down from above targetPos; return the Y of the first Ground surface found,
     // skipping the preview itself and any already-placed objects.
-    bool TryFindGroundY(Vector3 targetPos, out float groundY)
+    bool TryFindSupportY(Vector3 targetPos, out float supportY)
     {
-        groundY = 0f;
+        supportY = 0f;
 
         Vector3 rayOrigin = new Vector3(targetPos.x, targetPos.y + 25f, targetPos.z);
         RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, 50f, placementSurfaceMask);
 
-        // Sort ascending by distance so we evaluate highest surfaces first
         System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
         foreach (RaycastHit hit in hits)
         {
-            if (hit.collider == null) continue;
+            if (hit.collider == null)
+                continue;
 
-            // Skip the preview object's own colliders
-            if (previewInstance != null && hit.collider.transform.IsChildOf(previewInstance.transform)) continue;
+            // Skip preview itself
+            if (previewInstance != null && hit.collider.transform.IsChildOf(previewInstance.transform))
+                continue;
 
-            // Only accept Ground-tagged surfaces — placed objects are never tagged Ground
+            // Ground is valid
             if (hit.collider.CompareTag("Ground"))
             {
-                groundY = hit.point.y;
+                supportY = hit.point.y;
+                return true;
+            }
+
+            // Already placed object is also valid
+            GameObject hitRoot = GetPlacedObjectRoot(hit.collider.transform);
+            if (hitRoot != null && placedObjectsParent != null && hitRoot.transform.parent == placedObjectsParent)
+            {
+                supportY = hit.collider.bounds.max.y;
                 return true;
             }
         }
@@ -559,7 +607,8 @@ public class WallPlacer_VR : MonoBehaviour
 
         lastSavedMaterials = rend.materials;
         materialWheelController.SelectObject(rend);
-        materialWheelController.OpenWheel(0);
+        materialWheelController.OpenWheelAuto();
+        
     }
 
     void TryApplyCurrentMaterialSelection()
