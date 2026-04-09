@@ -197,9 +197,9 @@ public class WallPlacer_VR : MonoBehaviour
             return;
         }
 
-        if (InventoryManager1.Instance != null && InventoryManager1.IsMenuOpen())
+        if (InvetoryController.Instance != null && InvetoryController.IsMenuOpen())
         {
-            InventoryManager1.Instance.CloseInventory();
+            InvetoryController.Instance.CloseInventory();
             return;
         }
 

@@ -726,7 +726,7 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: -3326005586356538449, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+    m_Reference: {fileID: -5939254130553045501, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   m_RotationAction:
     m_UseReference: 1
     m_Action:
@@ -3328,7 +3328,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2cece71e4fece1b4c80a524b5a6f0998, type: 2}
+  - {fileID: 2100000, guid: acd55ca244576d046a11419bd51ebebe, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3368,7 +3368,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.362, y: -0.857, z: 1.977}
-  m_LocalScale: {x: 1, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -3424,9 +3424,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 766444554}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 115bf10dd055a8a4589401ad1dc3f9b0, type: 3}
+  m_Script: {fileID: 11500000, guid: e46818f42517baa4b900d112cdd6f067, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  target: {fileID: 2079559342}
+  height: 20
+  rotateWithPlayer: 0
 --- !u!114 &766444557
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3540,7 +3543,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: load
 --- !u!114 &779369301
 MonoBehaviour:
@@ -4298,7 +4301,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: save
 --- !u!114 &946998031
 MonoBehaviour:
@@ -4717,7 +4720,7 @@ GameObject:
   - component: {fileID: 1016470972}
   - component: {fileID: 1016470975}
   - component: {fileID: 1016470974}
-  - component: {fileID: 1016470973}
+  - component: {fileID: 1016470976}
   m_Layer: 5
   m_Name: HUDBalanceAmount
   m_TagString: Untagged
@@ -4744,18 +4747,6 @@ RectTransform:
   m_AnchoredPosition: {x: -858, y: 462}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1016470973
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1016470971}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7fc822c58d3f42a42ad94e3725ef4b39, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1016470974
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4853,6 +4844,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1016470971}
   m_CullTransparentMesh: 1
+--- !u!114 &1016470976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1016470971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1d25034796b9dd41819162dbe579070, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  balanceText: {fileID: 1016470974}
+  prefix: $
 --- !u!1 &1028281580
 GameObject:
   m_ObjectHideFlags: 0
@@ -6422,7 +6427,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: back_to_mainmenu
 --- !u!114 &1726662793
 MonoBehaviour:
@@ -6611,7 +6616,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1853702486}
-  - component: {fileID: 1853702485}
+  - component: {fileID: 1853702487}
   m_Layer: 0
   m_Name: BudgetManager  (1)
   m_TagString: Untagged
@@ -6619,21 +6624,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1853702485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1853702484}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e31b07ef897a3ca4fb97457d44266b8e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onBalanceChanged:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!4 &1853702486
 Transform:
   m_ObjectHideFlags: 0
@@ -6649,6 +6639,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1853702487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1853702484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e31b07ef897a3ca4fb97457d44266b8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onBalanceChanged:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1922812081
 GameObject:
   m_ObjectHideFlags: 0
@@ -6699,7 +6704,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5566e68ea718406428aa71ab94c6dfaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationData: {fileID: 11400000, guid: 1217337bc7ae2d74a8439779c55517b7, type: 2}
+  localizationData: {fileID: 11400000, guid: 84e89c7233f618c4980fe2d829acd340, type: 2}
   key: buy
 --- !u!114 &1922812084
 MonoBehaviour:
@@ -8069,7 +8074,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2cece71e4fece1b4c80a524b5a6f0998, type: 2}
+  - {fileID: 2100000, guid: acd55ca244576d046a11419bd51ebebe, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8109,7 +8114,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 4.416, y: -0.857, z: 1.977}
-  m_LocalScale: {x: 1, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

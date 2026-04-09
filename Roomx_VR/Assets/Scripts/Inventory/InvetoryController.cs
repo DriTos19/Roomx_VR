@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
 
-public class InventoryManager1 : InventoryManager
+public class InvetoryController : InventoryManager
 {
-    public new static InventoryManager1 Instance;
+    public new static InvetoryController Instance;
 
     [Header("Hover Preview UI")]
     public Image hoverPreviewImage;

@@ -20,7 +20,7 @@ MonoBehaviour:
   prefab3D: {fileID: 919132149155446097, guid: 2198a4632a3f28149b800e351907b5be, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 0
-  price: 150
+  price: 0
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2
