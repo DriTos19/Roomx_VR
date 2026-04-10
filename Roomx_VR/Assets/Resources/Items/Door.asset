@@ -15,11 +15,13 @@ MonoBehaviour:
   itemName: Door
   description: A functional entryway that connects spaces while providing privacy
     and access between rooms.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: 0ca2bf3c4939dc248a862eba316cbe3b, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 22f95857e7e525246a217a5d59dcacd7, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 2
-  price: 0
+  price: 10
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2
