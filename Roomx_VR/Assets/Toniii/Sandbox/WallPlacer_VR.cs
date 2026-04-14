@@ -529,7 +529,7 @@ public class WallPlacer_VR : MonoBehaviour
         if (target == gameObject || target == previewInstance)
             return;
 
-        if (target.CompareTag("Floor"))
+        if (target.CompareTag("Ground"))
             return;
 
         Renderer rend = target.GetComponentInChildren<Renderer>();

@@ -1779,6 +1779,7 @@ GameObject:
   - component: {fileID: 369156683}
   - component: {fileID: 369156682}
   - component: {fileID: 369156686}
+  - component: {fileID: 369156687}
   m_Layer: 0
   m_Name: '[Building Block] PICO Controller Tracking XR Origin (XR Rig)'
   m_TagString: Untagged
@@ -1894,6 +1895,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveProvider: {fileID: 194311171}
+--- !u!114 &369156687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 369156681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a47128c61c56f742b90d0e251351b23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floatSpeed: 2
+  deadzone: 0.2
 --- !u!1 &409822018
 GameObject:
   m_ObjectHideFlags: 0
