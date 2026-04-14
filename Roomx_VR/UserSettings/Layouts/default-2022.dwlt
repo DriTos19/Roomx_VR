@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1920
     height: 989
   m_ShowMode: 4
-  m_Title: Scene
+  m_Title: Game
   m_RootView: {fileID: 2}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -119,7 +119,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 130
+  controlID: 131
   draggingID: 0
 --- !u!114 &6
 MonoBehaviour:
@@ -145,7 +145,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 100}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 26
+  controlID: 55
   draggingID: 0
 --- !u!114 &7
 MonoBehaviour:
@@ -171,7 +171,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 50}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 27
+  controlID: 17
   draggingID: 0
 --- !u!114 &8
 MonoBehaviour:
@@ -249,7 +249,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 50}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 76
+  controlID: 56
   draggingID: 0
 --- !u!114 &11
 MonoBehaviour:
@@ -752,9 +752,9 @@ MonoBehaviour:
       floating: 0
       collapsed: 0
       displayed: 1
-      snapOffset: {x: 48, y: 48}
+      snapOffset: {x: -210, y: -223}
       snapOffsetDelta: {x: 0, y: 0}
-      snapCorner: 0
+      snapCorner: 3
       id: XR Building Blocks
       index: 8
       layout: 4
@@ -771,9 +771,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: 5.10529, y: 3.20163, z: 6.5226693}
+    m_Target: {x: 23.00784, y: 0.06811482, z: 4.8655887}
     speed: 2
-    m_Value: {x: 5.10529, y: 3.20163, z: 6.5226693}
+    m_Value: {x: 23.00784, y: 0.06811482, z: 4.8655887}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -819,13 +819,13 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: -0.16741091, y: 0.69890285, z: -0.17326519, w: -0.6744718}
+    m_Target: {x: -0.013289109, y: 0.7920183, z: 0.016101765, w: 0.6113297}
     speed: 2
-    m_Value: {x: -0.16703187, y: 0.6994157, z: -0.17339262, w: -0.6729435}
+    m_Value: {x: -0.013279465, y: 0.7914435, z: 0.01609008, w: 0.61088604}
   m_Size:
-    m_Target: 1.445233
+    m_Target: 12.124355
     speed: 2
-    m_Value: 1.445233
+    m_Value: 12.124355
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -886,10 +886,10 @@ MonoBehaviour:
     m_OverlaysVisible: 1
   m_SceneHierarchy:
     m_TreeViewState:
-      scrollPos: {x: 0, y: 32}
-      m_SelectedIDs: 24d9feff
-      m_LastClickedID: -75484
-      m_ExpandedIDs: 84d9feff24eafeff36eafeff30ebfeff72f1feffdef8feff1812ffff6412ffff081affff561bffff861bffff981dffff221fffff4e1fffffb81fffff9220fffff420ffff4221ffff9a21ffff0a22ffff5c24fffffa25ffffba27ffff2e28ffff262cffffdc2cffff502dffff8c36ffff2841ffff4651fffff853ffff565fffff1066ffff1e69ffffde6affffb86dffff1c70ffff7e72ffffc273ffff8a78ffff9ca1ffff7ca4ffffcea8ffff66aaffff42acffffd6b2ffff80bbffffcebbffff72c3ffffc0c4fffff0c4ffff02c7ffff8cc8ffffb8c8ffff22c9ffff0ccaffffa2caffff14cbffff8aceffff22d0ffff50d4ffff80d8ffff7cdaffff2ae0ffff18e3ffffb0e4ffffd6e8ffff8ce9fffff4e9ffff24fbffff54720000848d0000309c0000a4a7000072a8000068b2000008b3000062b3000034ba00003ceb000036f10000fcf2000098f50000bef5000002f600003af600005af6000084f60000dcf600000a240100502b01009e2d01001a3101003832010090330100de350100a8710100067e0100a27e0100268001002c800100a0810100f2810100f2850100
+      scrollPos: {x: 0, y: 0}
+      m_SelectedIDs: 86e40000
+      m_LastClickedID: 58502
+      m_ExpandedIDs: 0eb8ffff40b8ffffccc0ffff18c1ffffa0c8ffffeec9ffff1ecaffff30ccffffb8cdffffe8cdffff52ceffff12cfffff58d2ffff3ad6ffffeed7ffffa2daffff3ae3ffff86e3ffff22ebffff68ecffff90ecffff9aeeffff1af0ffff42f0ffffa4f0ffffd4f1ffff5cf3fffffaf4ffff24fbffff0888000012880000b8880000208a0000c68a0000e28b0000468c0000788c00003ce4000042e4000008e60000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -992,7 +992,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Klea
+    - Assets/Scenes
     m_Globs: []
     m_OriginalText: 
     m_ImportLogFlags: 0
@@ -1000,30 +1000,30 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/Klea
+  - Assets/Scenes
   m_LastFoldersGridSize: 16
   m_LastProjectPath: C:\Users\Roibus19\Downloads\Git\Roomx_VR\Roomx_VR
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: d0810000
-    m_LastClickedID: 33232
-    m_ExpandedIDs: 0000000000020000c0750000d27500008481000086810000888100008a8100008c8100008e81000090810000928100009481000096810000988100009a8100009c8100009e810000a0810000a2810000
+    scrollPos: {x: 0, y: 420}
+    m_SelectedIDs: 12820000
+    m_LastClickedID: 33298
+    m_ExpandedIDs: 0000000000020000be750000d07500008481000086810000888100008a8100008c8100008e81000090810000928100009481000096810000988100009a8100009c8100009e810000a0810000a2810000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: Scripts
-      m_OriginalName: Scripts
+      m_Name: 
+      m_OriginalName: 
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 33158
+      m_UserData: 0
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 0
+      m_OriginalEventType: 11
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 12}
     m_SearchString: 
@@ -1037,7 +1037,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 0000000000020000c0750000d27500008481000086810000888100008a8100008c8100008e81000090810000928100009481000096810000988100009a8100009c8100009e810000a0810000a2810000
+    m_ExpandedIDs: 0000000000020000be750000d07500008481000086810000888100008a8100008c8100008e81000090810000928100009481000096810000988100009a8100009c8100009e810000a0810000a2810000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1089,7 +1089,7 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
     m_NewAssetIndexInList: -1
-    m_ScrollPosition: {x: 0, y: 642.5}
+    m_ScrollPosition: {x: 0, y: 0}
     m_GridSize: 16
   m_SkipHiddenPackages: 0
   m_DirectoriesAreaWidth: 207
