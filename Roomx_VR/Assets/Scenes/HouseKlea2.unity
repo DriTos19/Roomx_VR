@@ -1183,7 +1183,7 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: -8568866643343392156, guid: 0be0028c24f2a4c14a96b6aa39055933, type: 3}
+    m_Reference: {fileID: 6436455328499600707, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   uiPressAction:
     m_UseReference: 0
     m_Action:
@@ -1605,7 +1605,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 265791758}
   m_LocalRotation: {x: -0, y: -0.9989773, z: -0, w: -0.045214932}
-  m_LocalPosition: {x: 0, y: 0, z: -28}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.21512777, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2195,7 +2195,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: c529dc5d72539df4ba0a257472dc68ac, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -9.998024
+      value: -9.666
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c529dc5d72539df4ba0a257472dc68ac, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2739,7 +2739,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2cece71e4fece1b4c80a524b5a6f0998, type: 2}
+  - {fileID: 2100000, guid: acd55ca244576d046a11419bd51ebebe, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2779,7 +2779,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -4.992, y: -0.963, z: -6.181}
-  m_LocalScale: {x: 2.09, y: 1.54, z: 0}
+  m_LocalScale: {x: 2.09, y: 1.54, z: 0.01}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -2842,7 +2842,7 @@ MonoBehaviour:
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: -1754795169705104138, guid: 0be0028c24f2a4c14a96b6aa39055933, type: 3}
+    m_Reference: {fileID: 2190847350600788980, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   cancelAction:
     m_UseReference: 1
     m_Action:
@@ -3914,7 +3914,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 94cb6317394ebbf43bd8f5966cc13f12, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 85d0903d8f3d5f5408c4fcb927d42451, type: 2}
+      objectReference: {fileID: 2100000, guid: b688030b7c372c147bfcd3f2d7c967a9, type: 2}
     - target: {fileID: 919132149155446097, guid: 94cb6317394ebbf43bd8f5966cc13f12, type: 3}
       propertyPath: m_Name
       value: Untitled

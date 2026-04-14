@@ -100,7 +100,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void LoadSandbox()
     {
-        SceneManager.LoadScene("Sandbox");
+        SceneManager.LoadScene("Sandbox 1");
     }
 
     // =========================
