@@ -211,7 +211,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.picoxr": {
-      "version": "file:C:/Users/Roibus19/Downloads/PICO Unity Integration SDK-3.4.0-20260226 (1)",
+      "version": "file:C:/Users/enton/Downloads/PICO Unity Integration SDK-3.4.0-20260226(2)",
       "depth": 0,
       "source": "local",
       "dependencies": {
