@@ -15,11 +15,13 @@ MonoBehaviour:
   itemName: Table
   description: A central table for dining and gatherings, perfect for meals, conversations,
     and shared moments.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: 9745b2580afc22c49b669375708822ae, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 44f70f7e617d5914c8afa89a29d7045b, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 2
-  price: 0
+  price: 10
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

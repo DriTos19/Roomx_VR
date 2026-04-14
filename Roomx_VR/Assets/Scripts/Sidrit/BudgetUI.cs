@@ -8,8 +8,17 @@ public class BudgetUI : MonoBehaviour
 
     void Start()
     {
-        BudgetManager.Instance.onBalanceChanged.AddListener(UpdateDisplay);
-        UpdateDisplay(BudgetManager.Instance.Balance);
+        if (BudgetManager.Instance != null)
+        {
+            BudgetManager.Instance.onBalanceChanged.AddListener(UpdateDisplay);
+            UpdateDisplay(BudgetManager.Instance.Balance);
+        }
+    }
+
+    void OnEnable()
+    {
+        if (BudgetManager.Instance != null)
+            UpdateDisplay(BudgetManager.Instance.Balance);
     }
 
     void OnDestroy()

@@ -89,10 +89,17 @@ public class WallPlacer_VR : MonoBehaviour
     public bool IsCarryingObject => isPlacing && previewInstance != null;
     public bool IsMaterialWheelOpen => materialWheelController != null && materialWheelController.IsOpen();
 
-    // NEW: movement is only allowed when not placing, not editing, and no wheel is open
-    public bool CanMove => !isPlacing && !isEditingExistingObject && !IsMaterialWheelOpen;
+    public bool CanMove
+    {
+        get
+        {
+            if (IsMaterialWheelOpen) return false;
+            if (isPlacing) return false;
+            if (isEditingExistingObject) return false;
+            return true;
+        }
+    }
 
-    // NEW: safe movement input getter for your locomotion script
     public Vector2 MovementInput
     {
         get
@@ -102,6 +109,24 @@ public class WallPlacer_VR : MonoBehaviour
 
             Vector2 input = movementAction.action.ReadValue<Vector2>();
             return input.magnitude < joystickDeadzone ? Vector2.zero : input;
+        }
+    }
+
+    public bool ShouldBlockMovement
+    {
+        get
+        {
+            if (IsMaterialWheelOpen)
+                return true;
+
+            if (isPlacing && useManualPlacementHeight && rightHeightAdjustAction.action != null)
+            {
+                Vector2 stick = rightHeightAdjustAction.action.ReadValue<Vector2>();
+                if (Mathf.Abs(stick.y) >= joystickDeadzone)
+                    return true;
+            }
+
+            return false;
         }
     }
 
@@ -123,7 +148,7 @@ public class WallPlacer_VR : MonoBehaviour
         EnableAction(leftApplyMaterialAction);
         EnableAction(leftJoystickAction);
         EnableAction(rightHeightAdjustAction);
-        EnableAction(movementAction); // NEW
+        EnableAction(movementAction);
     }
 
     void OnDisable()
@@ -135,7 +160,7 @@ public class WallPlacer_VR : MonoBehaviour
         DisableAction(leftApplyMaterialAction);
         DisableAction(leftJoystickAction);
         DisableAction(rightHeightAdjustAction);
-        DisableAction(movementAction); // NEW
+        DisableAction(movementAction);
     }
 
     void Update()
@@ -154,11 +179,9 @@ public class WallPlacer_VR : MonoBehaviour
 
         if (IsMaterialWheelOpen)
         {
-            // Feed joystick input to the wheel using the proven InputAction (not XRNode)
             if (leftJoystickAction.action != null)
                 materialWheelController.UpdateJoystickHighlight(leftJoystickAction.action.ReadValue<Vector2>());
 
-            // Right trigger OR dedicated apply button both confirm the selection
             if (rightPlacePressed || leftApplyPressed)
                 TryApplyCurrentMaterialSelection();
 
@@ -186,7 +209,6 @@ public class WallPlacer_VR : MonoBehaviour
                 TryEditObject();
         }
     }
-    
 
     void HandleCancel()
     {
@@ -197,9 +219,9 @@ public class WallPlacer_VR : MonoBehaviour
             return;
         }
 
-        if (InventoryManager1.Instance != null && InventoryManager1.IsMenuOpen())
+        if (InvetoryController.Instance != null && InvetoryController.IsMenuOpen())
         {
-            InventoryManager1.Instance.CloseInventory();
+            InvetoryController.Instance.CloseInventory();
             return;
         }
 
@@ -330,14 +352,23 @@ public class WallPlacer_VR : MonoBehaviour
             if (lockManualHeightXZToGrid)
                 targetPos = new Vector3(SnapToGridValue(targetPos.x), targetPos.y, SnapToGridValue(targetPos.z));
 
-            SnapPreviewBottomToY(manualPlacementHeight + surfaceOffset, targetPos);
-            canPlaceCurrentPreview = true;
-            SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
+            if (TryFindSupportY(targetPos, out float supportY))
+            {
+                SnapPreviewBottomToY(supportY + manualPlacementHeight + surfaceOffset, targetPos);
+                canPlaceCurrentPreview = true;
+                SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
+            }
+            else
+            {
+                SnapPreviewBottomToY(manualPlacementHeight + surfaceOffset, targetPos);
+                canPlaceCurrentPreview = true;
+                SetPreviewAlpha(previewInstance, PREVIEW_ALPHA);
+            }
+
             return;
         }
 
-        // Raycast straight down to find the Ground surface, ignoring placed objects
-        if (TryFindGroundY(targetPos, out float groundY))
+        if (TryFindSupportY(targetPos, out float groundY))
         {
             SnapPreviewBottomToY(groundY + surfaceOffset, targetPos);
             canPlaceCurrentPreview = true;
@@ -351,29 +382,33 @@ public class WallPlacer_VR : MonoBehaviour
         }
     }
 
-    // Cast straight down from above targetPos; return the Y of the first Ground surface found,
-    // skipping the preview itself and any already-placed objects.
-    bool TryFindGroundY(Vector3 targetPos, out float groundY)
+    bool TryFindSupportY(Vector3 targetPos, out float supportY)
     {
-        groundY = 0f;
+        supportY = 0f;
 
         Vector3 rayOrigin = new Vector3(targetPos.x, targetPos.y + 25f, targetPos.z);
         RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, 50f, placementSurfaceMask);
 
-        // Sort ascending by distance so we evaluate highest surfaces first
         System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
         foreach (RaycastHit hit in hits)
         {
-            if (hit.collider == null) continue;
+            if (hit.collider == null)
+                continue;
 
-            // Skip the preview object's own colliders
-            if (previewInstance != null && hit.collider.transform.IsChildOf(previewInstance.transform)) continue;
+            if (previewInstance != null && hit.collider.transform.IsChildOf(previewInstance.transform))
+                continue;
 
-            // Only accept Ground-tagged surfaces — placed objects are never tagged Ground
             if (hit.collider.CompareTag("Ground"))
             {
-                groundY = hit.point.y;
+                supportY = hit.point.y;
+                return true;
+            }
+
+            GameObject hitRoot = GetPlacedObjectRoot(hit.collider.transform);
+            if (hitRoot != null && placedObjectsParent != null && hitRoot.transform.parent == placedObjectsParent)
+            {
+                supportY = hit.collider.bounds.max.y;
                 return true;
             }
         }
@@ -381,17 +416,12 @@ public class WallPlacer_VR : MonoBehaviour
         return false;
     }
 
-    // Place the preview so its bottom mesh edge sits exactly at targetY.
-    // Uses world-space renderer bounds — works for any pivot offset, scale, or rotation.
     void SnapPreviewBottomToY(float targetY, Vector3 targetPos)
     {
-        // Step 1: position at targetY so Unity can compute world bounds
         previewInstance.transform.position = new Vector3(targetPos.x, targetY, targetPos.z);
 
-        // Step 2: read world-space bounds (accurate after rotation/scale are applied)
         Bounds b = GetWorldRendererBounds(previewInstance);
 
-        // Step 3: lift so the bottom of the mesh sits on targetY, not the pivot
         float correction = targetY - b.min.y;
         previewInstance.transform.position = new Vector3(targetPos.x, targetY + correction, targetPos.z);
     }
@@ -407,7 +437,6 @@ public class WallPlacer_VR : MonoBehaviour
             return b;
         }
 
-        // Fallback: use collider bounds
         Collider[] cols = obj.GetComponentsInChildren<Collider>(true);
         if (cols.Length > 0)
         {
@@ -462,6 +491,18 @@ public class WallPlacer_VR : MonoBehaviour
 
         if (enableDebugLogs)
             Debug.Log("[WallPlacer_VR] Placed object: " + placedObject.name);
+
+        // ── Register with FurnitureSaveManager ──────────────────────────────
+        if (currentSelectedItem != null)
+        {
+            FurniturePrefabReference prefabRef = placedObject.GetComponent<FurniturePrefabReference>();
+            if (prefabRef == null) prefabRef = placedObject.AddComponent<FurniturePrefabReference>();
+            prefabRef.prefabPath = currentSelectedItem.name; // matches the key FurnitureSaveManager uses
+            prefabRef.itemData   = currentSelectedItem;
+
+            FurnitureSaveManager.Instance?.RegisterFurniture(placedObject);
+        }
+        // ────────────────────────────────────────────────────────────────────
 
         DestroyIfExists(previewInstance);
         DestroyIfExists(editSourceObject);
@@ -536,6 +577,10 @@ public class WallPlacer_VR : MonoBehaviour
         isEditingExistingObject = true;
         canPlaceCurrentPreview = false;
 
+        // ── Unregister the original before destroying it ─────────────────────
+        FurnitureSaveManager.Instance?.UnregisterFurniture(target);
+        // ────────────────────────────────────────────────────────────────────
+
         Destroy(target);
     }
 
@@ -559,7 +604,7 @@ public class WallPlacer_VR : MonoBehaviour
 
         lastSavedMaterials = rend.materials;
         materialWheelController.SelectObject(rend);
-        materialWheelController.OpenWheel(0);
+        materialWheelController.OpenWheelAuto();
     }
 
     void TryApplyCurrentMaterialSelection()
@@ -579,6 +624,18 @@ public class WallPlacer_VR : MonoBehaviour
             GameObject restored = Instantiate(editSourceObject, oldObjectPosition, oldObjectRotation);
             restored.SetActive(true);
             ApplySavedMaterials(restored, false);
+
+            // ── Restore registration on cancel ───────────────────────────────
+            FurniturePrefabReference oldRef = editSourceObject.GetComponent<FurniturePrefabReference>();
+            if (oldRef != null)
+            {
+                FurniturePrefabReference newRef = restored.GetComponent<FurniturePrefabReference>();
+                if (newRef == null) newRef = restored.AddComponent<FurniturePrefabReference>();
+                newRef.prefabPath = oldRef.prefabPath;
+                newRef.itemData   = oldRef.itemData;
+            }
+            FurnitureSaveManager.Instance?.RegisterFurniture(restored);
+            // ─────────────────────────────────────────────────────────────────
         }
 
         DestroyIfExists(editSourceObject);

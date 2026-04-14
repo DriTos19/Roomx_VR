@@ -12,15 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50b67e15aeec206458735abb17af76e6, type: 3}
   m_Name: BathroomShelf
   m_EditorClassIdentifier: 
-  itemName: Bathroom-Shelf
-  description: 
+  itemName: Bedroom-Shelf
+  description: 'Perfect place to do your Make-Up, to leave your accesories , to study
+    and leave general things on it. '
   descriptionAlbanian: 
   descriptionGerman: 
-  icon: {fileID: 21300000, guid: 6ec54460d566d5846b87b1d08d12a557, type: 3}
+  icon: {fileID: 21300000, guid: 4115d19d8e767c341899b3c01ee68626, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 5577eada39200db428ebd90c42c60d47, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 0
-  price: 0
+  price: 10
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

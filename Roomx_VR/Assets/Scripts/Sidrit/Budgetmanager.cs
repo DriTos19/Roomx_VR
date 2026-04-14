@@ -55,6 +55,11 @@ public class BudgetManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+#if UNITY_EDITOR
+        PlayerPrefs.DeleteAll();
+#endif
+
         Load();
     }
 

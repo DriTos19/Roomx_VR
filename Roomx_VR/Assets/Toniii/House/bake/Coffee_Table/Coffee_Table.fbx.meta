@@ -3,7 +3,12 @@ guid: af731e9991f389c4fa284b96cd6a12be
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PBR scratched gold metal.002
+    second: {fileID: 2100000, guid: e432fba53d6452745bcad306f1eff5c5, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

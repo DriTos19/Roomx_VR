@@ -14,35 +14,25 @@ public class MaterialWheelManager : MonoBehaviour
     public int totalButtons = 8;
     public float radius = 8.5f;
 
-    private bool stickInUse;
-
     [Header("Preview")]
     [Range(0.1f, 1f)]
     public float previewImageScale = 0.8f;
 
+    private bool stickInUse;
     private bool isOpen = false;
     private int currentSlot = 0;
-    private int highlightedIndex = 0;
+    private int highlightedIndex = -1; // nothing highlighted at open
 
-    private Material selectedBaseMaterial;
     private Material[] materialsBeforeWheelOpen;
     private Material wheelBaseMaterialSnapshot;
 
     private readonly List<Material> materialVariants = new List<Material>();
     private readonly List<Button> spawnedSlices = new List<Button>();
 
-
-
     void Start()
     {
         if (wheelContainer != null)
             wheelContainer.gameObject.SetActive(false);
-    }
-
-    void Update()
-    {
-        if (!isOpen)
-            return;
     }
 
     public void UpdateJoystickHighlight(Vector2 stick)
@@ -60,7 +50,8 @@ public class MaterialWheelManager : MonoBehaviour
             return;
 
         float angle = Mathf.Atan2(stick.y, stick.x);
-        if (angle < 0f) angle += Mathf.PI * 2f;
+        if (angle < 0f)
+            angle += Mathf.PI * 2f;
 
         int newIndex = Mathf.RoundToInt(angle / (Mathf.PI * 2f / materialVariants.Count)) % materialVariants.Count;
 
@@ -103,31 +94,27 @@ public class MaterialWheelManager : MonoBehaviour
         if (currentObject == null)
             return;
 
-        currentSlot = slotIndex;
-
         Material[] currentMats = currentObject.materials;
-
         if (currentMats == null || currentMats.Length == 0)
             return;
 
-        if (currentSlot < 0 || currentSlot >= currentMats.Length)
-            return;
+        currentSlot = Mathf.Clamp(slotIndex, 0, currentMats.Length - 1);
 
+// current state only for cancel/restore while wheel is open
         materialsBeforeWheelOpen = new Material[currentMats.Length];
         for (int i = 0; i < currentMats.Length; i++)
             materialsBeforeWheelOpen[i] = new Material(currentMats[i]);
 
-        wheelBaseMaterialSnapshot = new Material(currentMats[currentSlot]);
-        selectedBaseMaterial = new Material(currentMats[currentSlot]);
-
-        if (selectedBaseMaterial == null)
+// ORIGINAL state for building fixed button variants
+        Material[] originalMats = GetOrCreateOriginalMaterials(currentObject);
+        if (originalMats == null || currentSlot >= originalMats.Length)
             return;
 
-        isOpen = true;
-        highlightedIndex = 0;
-        stickInUse = false;
+        wheelBaseMaterialSnapshot = new Material(originalMats[currentSlot]);
 
-        Time.timeScale = 0f;
+        isOpen = true;
+        highlightedIndex = -1; // IMPORTANT: do not auto-preview any color
+        stickInUse = false;
 
         if (wheelContainer != null)
             wheelContainer.gameObject.SetActive(true);
@@ -139,12 +126,13 @@ public class MaterialWheelManager : MonoBehaviour
     public void CloseWheel()
     {
         isOpen = false;
-        Time.timeScale = 1f;
+        stickInUse = false;
+        highlightedIndex = -1;
 
         if (wheelContainer != null)
             wheelContainer.gameObject.SetActive(false);
 
-        wheelBaseMaterialSnapshot = null;
+        ClearWheelUI();
     }
 
     public bool IsOpen()
@@ -158,7 +146,6 @@ public class MaterialWheelManager : MonoBehaviour
             return;
 
         Material[] mats = new Material[materialsBeforeWheelOpen.Length];
-
         for (int i = 0; i < materialsBeforeWheelOpen.Length; i++)
             mats[i] = new Material(materialsBeforeWheelOpen[i]);
 
@@ -172,31 +159,133 @@ public class MaterialWheelManager : MonoBehaviour
         if (wheelBaseMaterialSnapshot == null)
             return;
 
+        // Main baked material
         Material sourceMat = new Material(wheelBaseMaterialSnapshot);
 
-        // Use strongly distinct colors so any change is immediately visible regardless of base material
-        List<Color> colors = new List<Color>
+        // -------- FIRST 4 BUTTONS: same baked material, different brightness --------
+        float[] brightnessLevels = new float[]
         {
-            new Color(1f,   0.2f, 0.2f, 1f), // red
-            new Color(0.2f, 1f,   0.2f, 1f), // green
-            new Color(0.2f, 0.4f, 1f,   1f), // blue
-            new Color(1f,   0.9f, 0.1f, 1f), // yellow
-            new Color(0.2f, 0.9f, 0.9f, 1f), // cyan
-            new Color(0.9f, 0.2f, 0.9f, 1f), // magenta
-            new Color(1f,   1f,   1f,   1f), // white
-            new Color(0.1f, 0.1f, 0.1f, 1f), // black
+            0.55f, // dark
+            0.75f, // darker / medium dark
+            1.15f, // light
+            1.35f  // lighter
         };
 
-        int count = Mathf.Min(totalButtons, colors.Count);
-
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < brightnessLevels.Length; i++)
         {
             Material variant = new Material(sourceMat);
-            SetMaterialColor(variant, colors[i]);
+            ApplyBrightnessToMaterial(variant, brightnessLevels[i]);
+            materialVariants.Add(variant);
+        }
+
+        // -------- OTHER 4 BUTTONS: soft color-tinted versions --------
+        Color[] tintColors = new Color[]
+        {
+            new Color(1f,   0.4f, 0.4f, 1f), // light red
+            new Color(0.4f, 0.6f, 1f, 1f),   // light blue
+            new Color(0.4f, 1f,   0.4f, 1f), // light green
+            new Color(1f,   0.9f, 0.4f, 1f), // light yellow
+        };
+
+        for (int i = 0; i < tintColors.Length; i++)
+        {
+            Material variant = new Material(sourceMat);
+            SetMaterialTint(variant, tintColors[i]);
             materialVariants.Add(variant);
         }
     }
+    
+    void ApplyBrightnessToMaterial(Material mat, float multiplier)
+    {
+        if (mat == null)
+            return;
 
+        // Base color
+        if (mat.HasProperty("_BaseColor"))
+        {
+            Color c = mat.GetColor("_BaseColor");
+            c.r = Mathf.Clamp01(c.r * multiplier);
+            c.g = Mathf.Clamp01(c.g * multiplier);
+            c.b = Mathf.Clamp01(c.b * multiplier);
+            c.a = 1f;
+            mat.SetColor("_BaseColor", c);
+        }
+
+        // Built-in / Standard
+        if (mat.HasProperty("_Color"))
+        {
+            Color c = mat.GetColor("_Color");
+            c.r = Mathf.Clamp01(c.r * multiplier);
+            c.g = Mathf.Clamp01(c.g * multiplier);
+            c.b = Mathf.Clamp01(c.b * multiplier);
+            c.a = 1f;
+            mat.SetColor("_Color", c);
+        }
+
+        // Fallback
+        Color fallback = mat.color;
+        fallback.r = Mathf.Clamp01(fallback.r * multiplier);
+        fallback.g = Mathf.Clamp01(fallback.g * multiplier);
+        fallback.b = Mathf.Clamp01(fallback.b * multiplier);
+        fallback.a = 1f;
+        mat.color = fallback;
+    }
+
+    void SetMaterialTint(Material mat, Color tint)
+    {
+        if (mat == null)
+            return;
+
+        tint.a = 1f;
+
+        if (mat.HasProperty("_BaseColor"))
+            mat.SetColor("_BaseColor", tint);
+
+        if (mat.HasProperty("_Color"))
+            mat.SetColor("_Color", tint);
+
+        mat.color = tint;
+    }
+    
+    void SetMaterialColorPreserveTextureLook(Material mat, Color color)
+    {
+        if (mat == null)
+            return;
+
+        color.a = 1f;
+
+        if (mat.HasProperty("_BaseColor"))
+            mat.SetColor("_BaseColor", color);
+
+        if (mat.HasProperty("_Color"))
+            mat.SetColor("_Color", color);
+
+        mat.color = color;
+
+        // Optional: keep emission off unless you explicitly want glow
+        if (mat.HasProperty("_EmissionColor"))
+            mat.SetColor("_EmissionColor", Color.black);
+    }
+    Material[] GetOrCreateOriginalMaterials(Renderer rend)
+    {
+        if (rend == null)
+            return null;
+
+        MaterialWheelObjectState state = rend.GetComponent<MaterialWheelObjectState>();
+        if (state == null)
+            state = rend.gameObject.AddComponent<MaterialWheelObjectState>();
+
+        if (state.originalMaterials == null || state.originalMaterials.Length == 0)
+        {
+            Material[] mats = rend.materials;
+            state.originalMaterials = new Material[mats.Length];
+
+            for (int i = 0; i < mats.Length; i++)
+                state.originalMaterials[i] = new Material(mats[i]);
+        }
+
+        return state.originalMaterials;
+    }
     void CreateWheel()
     {
         if (sliceContainer == null || slicePrefab == null || materialVariants.Count == 0)
@@ -205,10 +294,7 @@ public class MaterialWheelManager : MonoBehaviour
             return;
         }
 
-        foreach (Transform child in sliceContainer)
-            Destroy(child.gameObject);
-
-        spawnedSlices.Clear();
+        ClearWheelUI();
 
         int n = materialVariants.Count;
 
@@ -217,39 +303,26 @@ public class MaterialWheelManager : MonoBehaviour
         float prefabHeight = prefabRT != null ? prefabRT.rect.height : 60f;
         float prefabButtonSize = Mathf.Max(prefabWidth, prefabHeight);
 
-        float finalRadius = radius;
-
         for (int i = 0; i < n; i++)
         {
             float angle = i * Mathf.PI * 2f / n;
-            Vector2 pos = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * finalRadius;
+            Vector2 pos = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
             Button slice = Instantiate(slicePrefab, sliceContainer);
             RectTransform sliceRT = slice.GetComponent<RectTransform>();
             sliceRT.anchoredPosition = pos;
 
-            ColorBlock cb = slice.colors;
-            cb.normalColor = Color.white;
-            cb.highlightedColor = Color.white;
-            cb.pressedColor = Color.white;
-            cb.selectedColor = Color.white;
-            cb.disabledColor = Color.white;
-            cb.colorMultiplier = 1f;
-            cb.fadeDuration = 0f;
-            slice.colors = cb;
-            slice.transition = Selectable.Transition.None;
-
             Material variantMat = materialVariants[i];
             Texture previewTexture = GetMaterialTexture(variantMat);
-            Color previewColor = GetMaterialColor(variantMat);
+            Color previewColor = GetButtonPreviewColor(i);
             previewColor.a = 1f;
 
             RawImage preview = slice.transform.Find("PreviewImage")?.GetComponent<RawImage>();
             if (preview != null)
             {
                 RectTransform rt = preview.rectTransform;
-
                 float previewSize = prefabButtonSize * previewImageScale;
+
                 rt.anchorMin = new Vector2(0.5f, 0.5f);
                 rt.anchorMax = new Vector2(0.5f, 0.5f);
                 rt.pivot = new Vector2(0.5f, 0.5f);
@@ -273,48 +346,73 @@ public class MaterialWheelManager : MonoBehaviour
         }
     }
 
+    Color GetButtonPreviewColor(int index)
+    {
+        switch (index)
+        {
+            // Keep the first 4 buttons looking like normal neutral previews
+            case 0: return new Color(0.85f, 0.85f, 0.85f, 1f);
+            case 1: return new Color(0.85f, 0.85f, 0.85f, 1f);
+            case 2: return new Color(0.85f, 0.85f, 0.85f, 1f);
+            case 3: return new Color(0.85f, 0.85f, 0.85f, 1f);
+
+            // Keep the other 4 as light tinted colors
+            case 4: return new Color(1f,   0.4f, 0.4f, 1f); // light red
+            case 5: return new Color(0.4f, 0.6f, 1f, 1f);   // light blue
+            case 6: return new Color(0.4f, 1f,   0.4f, 1f); // light green
+            case 7: return new Color(1f,   0.9f, 0.4f, 1f); // light yellow
+        }
+
+        return Color.white;
+    }
+    
+    void ClearWheelUI()
+    {
+        foreach (Button slice in spawnedSlices)
+        {
+            if (slice != null)
+                Destroy(slice.gameObject);
+        }
+
+        spawnedSlices.Clear();
+    }
+
     Color GetMaterialColor(Material mat)
     {
-        if (mat == null)
-            return Color.white;
-
-        if (mat.HasProperty("_BaseColor"))
-            return mat.GetColor("_BaseColor");
-
-        if (mat.HasProperty("_Color"))
-            return mat.GetColor("_Color");
-
+        if (mat == null) return Color.white;
+        if (mat.HasProperty("_BaseColor")) return mat.GetColor("_BaseColor");
+        if (mat.HasProperty("_Color")) return mat.GetColor("_Color");
         return Color.white;
     }
 
     Texture GetMaterialTexture(Material mat)
     {
-        if (mat == null)
-            return null;
-
-        if (mat.HasProperty("_BaseMap"))
-            return mat.GetTexture("_BaseMap");
-
-        if (mat.HasProperty("_MainTex"))
-            return mat.GetTexture("_MainTex");
-
+        if (mat == null) return null;
+        if (mat.HasProperty("_BaseMap")) return mat.GetTexture("_BaseMap");
+        if (mat.HasProperty("_MainTex")) return mat.GetTexture("_MainTex");
         return null;
     }
 
     void SetMaterialColor(Material mat, Color color)
     {
         if (mat == null) return;
+
         color.a = 1f;
 
-        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
-        if (mat.HasProperty("_Color"))     mat.SetColor("_Color", color);
+        if (mat.HasProperty("_BaseColor"))
+            mat.SetColor("_BaseColor", color);
 
-        // Fallback: Unity's built-in color setter works across Legacy, Standard and URP shaders
+        if (mat.HasProperty("_Color"))
+            mat.SetColor("_Color", color);
+
         mat.color = color;
     }
 
     public void ApplyHighlightedVariant()
     {
+        if (highlightedIndex < 0 || highlightedIndex >= materialVariants.Count)
+            return; // IMPORTANT: do nothing if user has not highlighted anything yet
+
         ApplyVariant(highlightedIndex);
     }
 
@@ -335,5 +433,45 @@ public class MaterialWheelManager : MonoBehaviour
         currentObject.materials = mats;
 
         CloseWheel();
+    }
+    
+    public void OpenWheelAuto()
+    {
+        if (currentObject == null)
+            return;
+
+        Material[] mats = currentObject.materials;
+
+        if (mats == null || mats.Length == 0)
+            return;
+
+        int bestIndex = 0;
+
+        for (int i = 0; i < mats.Length; i++)
+        {
+            if (HasBakedTexture(mats[i]))
+            {
+                bestIndex = i;
+                break;
+            }
+        }
+
+        OpenWheel(bestIndex);
+    }
+    
+    bool HasBakedTexture(Material mat)
+    {
+        if (mat == null)
+            return false;
+
+        // URP / HDRP
+        if (mat.HasProperty("_BaseMap") && mat.GetTexture("_BaseMap") != null)
+            return true;
+
+        // Built-in
+        if (mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") != null)
+            return true;
+
+        return false;
     }
 }

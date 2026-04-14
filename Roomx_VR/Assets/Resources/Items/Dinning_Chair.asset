@@ -15,11 +15,13 @@ MonoBehaviour:
   itemName: Chair
   description: A sturdy chair designed specifically for use with dining tables, offering
     comfort during meals.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: 79c116ce48cbd9340a05038bc63ab909, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 307b7bdded23b664096ab4b8cf1c4244, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 3
-  price: 0
+  price: 10
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2

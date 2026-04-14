@@ -15,11 +15,13 @@ MonoBehaviour:
   itemName: Chair
   description: A basic single-person chair that works well in any room for quick
     seating and utility.
+  descriptionAlbanian: 
+  descriptionGerman: 
   icon: {fileID: 21300000, guid: 373a9456b981a7147909be0e0eff62c0, type: 3}
   prefab3D: {fileID: 919132149155446097, guid: 4df50eb088cb4174b8a53693ca021c1e, type: 3}
   placementRotationOffset: {x: 0, y: 0, z: 0}
   category: 3
-  price: 0
+  price: 10
   useManualPlacementHeight: 0
   manualPlacementHeight: 2.5
   manualHeightAdjustSpeed: 2
