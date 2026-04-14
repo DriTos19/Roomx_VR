@@ -411,54 +411,6 @@
                     "isPartOfComposite": false
                 }
             ]
-        },
-        {
-            "name": "RightHand",
-            "id": "071eca8a-96f3-44dc-b256-84c42c39df37",
-            "actions": [
-                {
-                    "name": "OpenMenu",
-                    "type": "Button",
-                    "id": "196ce205-1e3b-43ea-be5c-9a60b42e1d08",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Rotate",
-                    "type": "Value",
-                    "id": "0e2a63b2-d20b-4025-9f5e-7fc4be9e8b35",
-                    "expectedControlType": "Vector2",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                }
-            ],
-            "bindings": [
-                {
-                    "name": "",
-                    "id": "185f94ab-3da5-4b0f-9465-e31a0a547d12",
-                    "path": "<XRController>{RightHand}/{SecondaryButton}",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "OpenMenu",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "14757c94-03ee-4802-b714-7115fb6c0756",
-                    "path": "<XRController>{RightHand}/{Primary2DAxis}",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Rotate",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                }
-            ]
         }
     ],
     "controlSchemes": []
