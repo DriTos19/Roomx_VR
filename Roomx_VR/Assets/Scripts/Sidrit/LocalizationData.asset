@@ -61,17 +61,13 @@ MonoBehaviour:
     english: English
     albanian: Anglisht
     german: Englisch
-  - key: english
-    english: English
-    albanian: Anglisht
-    german: Englisch
   - key: previous
     english: Previous
     albanian: Mbrapa
     german: "Zur\xFCck"
   - key: next
     english: Next
-    albanian: Mbrapa
+    albanian: Tjetra
     german: Weiter
   - key: back
     english: Back
